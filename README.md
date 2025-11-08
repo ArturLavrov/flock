@@ -5,7 +5,7 @@
 <h1 align="center">Flock</h1>
 
 <p align="center">
-  <em>Lightweight decentralized service discovery platform</em>
+  <em>Decentralized service discovery platform</em>
 </p>
 
 ---
