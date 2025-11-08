@@ -1,0 +1,116 @@
+openapi: 3.0.3
+info:
+  title: Flock Agent REST API
+  version: 0.1.0
+  description: >
+    Minimal REST API for the Flock Agent.  
+    Allows querying the agent's local membership view and retrieving a random peer sample.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      operationId: healthz
+      responses:
+        '200':
+          description: Agent is healthy
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ok
+
+  /v1/nodes:
+    get:
+      summary: List all alive nodes known by the agent
+      operationId: listNodes
+      tags: [nodes]
+      parameters:
+        - name: service
+          in: query
+          required: false
+          description: Optional service name to filter nodes
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of alive nodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Node'
+              examples:
+                example:
+                  value:
+                    - id: node-1
+                      addr: 10.0.0.11:7946
+                      service: payments
+                      last_heartbeat: 1730580000
+                    - id: node-2
+                      addr: 10.0.0.12:7946
+                      service: auth
+                      last_heartbeat: 1730580005
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  schemas:
+    Node:
+      type: object
+      required:
+        - id
+        - addr
+        - last_heartbeat
+      properties:
+        id:
+          type: string
+          description: Unique node identifier within the cluster
+          example: node-1
+        addr:
+          type: string
+          description: Node network address in host:port format
+          example: 10.0.0.11:7946
+        service:
+          type: string
+          description: Optional logical service or group label
+          example: payments
+        last_heartbeat:
+          type: integer
+          format: int64
+          description: Unix timestamp (seconds) of the node's last heartbeat
+          example: 1730580000
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+          nullable: true
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "n must be >= 1"
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "internal error"

@@ -1,0 +1,75 @@
+openapi: 3.0.3
+info:
+  title: Peer Sampling Service API
+  version: 1.0.0
+  description: >
+    Minimal API for retrieving a random subset of peers currently known to the system.
+servers:
+  - url: http://localhost:8081
+    description: Local development
+
+paths:
+  /v1/peers:
+    get:
+      summary: Get a random subset of peers
+      description: >
+        Returns a randomly selected subset of known peers in the cluster.  
+        The number of peers returned is controlled by the `limit` parameter.
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of peers to return.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 5
+      responses:
+        '200':
+          description: A list of sampled peers.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  peers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Peer'
+                required:
+                  - peers
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Peer:
+      type: object
+      description: Basic peer descriptor.
+      properties:
+        id:
+          type: string
+          description: Unique node identifier within the cluster.
+          example: "node-8d312a3f"
+        address:
+          type: string
+          description: Host and port to reach this peer (ip:port or host:port).
+          example: "10.0.0.12:5000"
+        service:
+          type: string
+          description: Logical service that this peer belongs to.
+          example: "payment-service"
+      required:
+        - id
+        - address
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
