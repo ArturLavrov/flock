@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./logo.png" alt="Flock Logo" width="220" />
+  <img src="./.github/img/logo.png" alt="Flock Logo" width="220" />
 </p>
 
 <h1 align="center">Flock</h1>
