@@ -15,7 +15,7 @@ func main() {
 		fmt.Println("Usage: go run main.go <node_name>, <bind_port>")
 		os.Exit(1)
 	}
-	nodeName := os.Args[1]
+	nodeName := os.Args[1] //TODO(https://github.com/ArturLavrov/flock/issues/1) generate a node name automatically
 	bindPort := os.Args[2]
 
 	agent := gossipingAgent.Start(nodeName, bindPort, getAllPeerSamplingServices())
@@ -26,5 +26,6 @@ func main() {
 }
 
 func getAllPeerSamplingServices() []models.Peer {
+	//TODO:(https://github.com/ArturLavrov/flock/issues/2)
 	return []models.Peer{}
 }
