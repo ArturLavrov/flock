@@ -4,6 +4,7 @@ import (
 	gossipingAgent "flock/internal/agent"
 	"flock/internal/models"
 	peerSampingService "flock/internal/peer-sampling-service/http"
+	"flock/internal/shortID"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,7 +16,7 @@ func main() {
 		fmt.Println("Usage: go run main.go <node_name>, <bind_port>")
 		os.Exit(1)
 	}
-	nodeName := os.Args[1] //TODO(https://github.com/ArturLavrov/flock/issues/1) generate a node name automatically
+	nodeName := generatePSSNodeName()
 	bindPort := os.Args[2]
 
 	agent := gossipingAgent.Start(nodeName, bindPort, getAllPeerSamplingServices())
@@ -23,6 +24,10 @@ func main() {
 
 	log.Println("Peer sampling service started :8081")
 	log.Fatal(http.ListenAndServe(":8081", h))
+}
+
+func generatePSSNodeName() string {
+	return fmt.Sprintf("pss_%s", shortID.Generate())
 }
 
 func getAllPeerSamplingServices() []models.Peer {

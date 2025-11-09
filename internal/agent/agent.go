@@ -147,7 +147,6 @@ func parsePort(s string) int {
 }
 
 // memberToNode converts a memberlist node to our internal models.Node.
-// Here you can decode metadata later (service name, tags, etc.)
 func memberToNode(m *memberlist.Node) models.Node {
 	return models.Node{
 		ID:            m.Name,
