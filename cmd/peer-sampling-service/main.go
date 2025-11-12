@@ -28,21 +28,21 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8081", h))
 }
 
-func validateGossipPort(portStr string) int {
+func validateGossipPort(portStr string) string {
 	if portStr == "" {
 		log.Fatal("Port cannot be empty")
 	}
 
-	port, err := strconv.Atoi(portStr)
+	portIntValue, err := strconv.Atoi(portStr)
 	if err != nil {
 		log.Fatalf("Invalid port number: %s", portStr)
 	}
 
-	if port < 1 || port > 65535 {
-		log.Fatalf("Port out of range: %d (valid range: 1–65535)", port)
+	if portIntValue < 1 || portIntValue > 65535 {
+		log.Fatalf("Port out of range: %d (valid range: 1–65535)", portIntValue)
 	}
 
-	return port
+	return portStr
 }
 
 func generatePSSNodeName() string {
