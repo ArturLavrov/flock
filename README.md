@@ -14,7 +14,7 @@ It eliminates the need for centralized registries like Consul or Eureka and can 
 ## 🚀 Motivation
 
 Modern distributed systems commonly rely on centralized coordination services such as Consul, Eureka, or CoreDNS (in Kubernetes) to enable service discovery and health monitoring.
-These platforms provide robust and production-proven mechanisms for name resolution, service registration, and fault detection — forming the backbone of most cloud-native architectures today.
+These platforms provide robust and production-proven mechanisms for name resolution, service registration, and fault detection — forming the backbone of most distributed architectures today.
 
 However, in certain scenarios — particularly at very large scales or in heterogeneous environments — the reliance on a central control plane can introduce operational complexity and, in some cases, become a potential performance bottleneck or single point of failure.
 This is especially relevant for systems deployed across multiple clusters, regions, or constrained edge networks, where maintaining consistent global state may be challenging.
