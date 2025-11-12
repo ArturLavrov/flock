@@ -32,5 +32,21 @@ By leveraging a lightweight, SWIM-inspired gossip protocol, Flock allows service
 | 🌐 **Edge / IoT networks** | Distributed devices with intermittent connectivity | Peer-to-peer, self-healing, low resource consumption |
 | ☁️ **Hybrid & multi-cloud systems** | Multi-region or multi-cluster deployments | Enables discovery across heterogeneous environments |
 
+## ⚡ Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/ArturLavrov/flock.git
+cd flock
+
+# Run peer-sampling service
+go run cmd/peer-sampling-service/main.go 7946
+
+# Start another node and join
+go run cmd/flock-agent/main.go node2 7947 8085
+
+# Query available peers
+curl http://localhost:8085/v1/peers
+```
 ---
 <p align="center"> <sub>Built with ❤️ in Go for distributed systems enthusiasts</sub> </p>
