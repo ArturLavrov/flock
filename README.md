@@ -8,8 +8,6 @@
   <em>Decentralized service discovery platform</em>
 </p>
 
----
-
 ## 🕊️ Overview
 
 **Flock** is a decentralized service discovery framework built with Go.  
