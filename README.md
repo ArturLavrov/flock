@@ -29,8 +29,8 @@ By leveraging a lightweight, SWIM-inspired gossip protocol, Flock allows service
 |--------------|-------------|----------------|
 | 🧱 **Large clusters** | Systems where CoreDNS, Consul, Eureka or any other centralize solution could be a bottleneck | Acts as an overlay discovery mesh across clusters |
 | 🖥️ **VM-based / Bare-metal microservices** | Legacy or minimal infrastructures without Kubernetes | No control plane required; runs as a single agent per host |
-| 🌐 **Edge / IoT networks** | Distributed devices with intermittent connectivity | Peer-to-peer, self-healing, low resource consumption |
 | ☁️ **Hybrid & multi-cloud systems** | Multi-region or multi-cluster deployments | Enables discovery across heterogeneous environments |
+| 🌐 **Edge computing platforms** | Distributed devices with intermittent connectivity | Peer-to-peer, self-healing, low resource consumption |
 
 ## ⚡ Quick Start
 
