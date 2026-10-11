@@ -4,68 +4,38 @@ import (
 	gossipingAgent "flock/internal/flock-agent"
 	"flock/internal/models"
 	peerSampingService "flock/internal/peer-sampling-service/http"
-	"flock/internal/shortID"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"strconv"
+	"github.com/google/uuid"
+	"strings"
 )
 
 func main() {
-	if len(os.Args) < 1 {
-		//TODO: think about proper cli design.
-		//http addres and gossip port should be specified.
-		fmt.Println("Usage: go run main.go [pss_node_host: pss_node_port]")
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: go run main.go <gossip_port>")
 		os.Exit(1)
 	}
 
-	var pss_node []*models.Peer
-	pss_nodes := parsePssNodesList(os.Args[1:])
-	root_node := pss_node[0];
-	
-	agent := gossipingAgent.Start(root_node.ID, root_node.Port, pss_nodes)
+	gossipPort := validateGossipPort(os.Args[1])
+	pssNodeName := generatePssNodeName()
+	peers := getPeers()
+
+	agent := gossipingAgent.Start(pssNodeName, gossipPort, peers)
 	h := peerSampingService.Start(agent)
 
 	log.Println("Peer sampling service started :8081")
 	log.Fatal(http.ListenAndServe(":8081", h))
 }
 
-func parsePssNodesList(addresses []string) []*models.Peer {
-	var pss_node_ID = shortID.Generate();
-	var generatePssNodeName = func () string {return fmt.Sprintf("pss_%s", pss_node_ID)}
-	var pss_list []*models.Peer
-	for _, addr := range addresses {
-		host, port, err := net.SplitHostPort(addr)
-			if err != nil {
-				log.Fatalf("invalid address %q: %v\n", addr, err)
-			}
-			validateGossipPort(port)
-			pss_node := &models.Peer{
-				//TODO: clarify a difference between ID and ServiceName
-				ID:pss_node_ID,
-				Address:addr,
-				ServiceName:generatePssNodeName(),
-				Host: host,
-				Port: port,
-			}
-			pss_list = append(pss_list, pss_node)
-	}
-
-	if len(pss_list) == 1 {
-		return []*models.Peer{}
-	}
-		
-	return pss_list
-}
-
 func validateGossipPort(portStr string) string {
-	const(
+	const (
 		MIN_PORT_VALUE = 1
-		MAX_PORT_VALUE = 2
+		MAX_PORT_VALUE = 65535
 	)
-	
+
 	if portStr == "" {
 		log.Fatal("Port cannot be empty")
 	}
@@ -76,10 +46,20 @@ func validateGossipPort(portStr string) string {
 	}
 
 	if portValue < MIN_PORT_VALUE || portValue > MAX_PORT_VALUE {
-		log.Fatalf("Port out of range: %d (valid range: 1–65535)", portValue)
+		log.Fatalf("Port out of range: %d (valid range: 1-65535)", portValue)
 	}
 
 	return portStr
+}
+
+func generatePssNodeName() string {
+	var shortId = strings.Split(uuid.New().String(), "-")[0]
+	return fmt.Sprintf("pss_%s", shortId)
+}
+
+func getPeers() []models.Peer {
+	var peers []models.Peer
+	return peers
 }
 
 
