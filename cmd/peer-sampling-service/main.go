@@ -1,7 +1,7 @@
 package main
 
 import (
-	gossipingAgent "flock/internal/agent"
+	gossipingAgent "flock/internal/flock-agent"
 	"flock/internal/models"
 	peerSampingService "flock/internal/peer-sampling-service/http"
 	"flock/internal/shortID"
@@ -81,6 +81,5 @@ func validateGossipPort(portStr string) string {
 
 	return portStr
 }
-
 
 

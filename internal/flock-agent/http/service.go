@@ -1,9 +1,10 @@
 package http
 
 import (
-	"flock/internal/agent"
-	"github.com/gin-gonic/gin"
+	"flock/internal/flock-agent"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func Start(a agent.Agent) http.Handler {

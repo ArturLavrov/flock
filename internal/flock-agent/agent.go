@@ -1,7 +1,7 @@
 package agent
 
 import (
-	"flock/internal/agent/models"
+	"flock/internal/flock-agent/models"
 	internalModels "flock/internal/models"
 	"fmt"
 	"log"
