@@ -1,7 +1,7 @@
 package http
 
 import (
-	gossipAgent "flock/internal/agent"
+	gossipAgent "flock/internal/flock-agent"
 	"flock/internal/models"
 	"net/http"
 

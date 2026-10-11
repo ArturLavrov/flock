@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	gossipingAgent "flock/internal/agent"
-	httpService "flock/internal/agent/http"
+	gossipingAgent "flock/internal/flock-agent"
+	httpService "flock/internal/flock-agent/http"
 	"flock/internal/models"
 	"fmt"
 	"log"
