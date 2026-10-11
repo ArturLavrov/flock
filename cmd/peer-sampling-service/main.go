@@ -2,14 +2,13 @@ package main
 
 import (
 	gossipingAgent "flock/internal/flock-agent"
-	"flock/internal/models"
 	peerSampingService "flock/internal/peer-sampling-service/http"
 	"fmt"
+	"github.com/google/uuid"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
-	"github.com/google/uuid"
 	"strings"
 )
 
@@ -57,9 +56,7 @@ func generatePssNodeName() string {
 	return fmt.Sprintf("pss_%s", shortId)
 }
 
-func getPeers() []models.Peer {
-	var peers []models.Peer
+func getPeers() []gossipingAgent.Peer {
+	var peers []gossipingAgent.Peer
 	return peers
 }
-
-

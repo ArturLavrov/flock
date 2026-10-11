@@ -2,7 +2,6 @@ package http
 
 import (
 	gossipAgent "flock/internal/flock-agent"
-	"flock/internal/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,9 +14,9 @@ func Start(agent gossipAgent.Agent) http.Handler {
 	r.GET("/v1/peers", func(c *gin.Context) {
 		nodes := agent.GetAllNodes()
 
-		var peers []models.Peer
+		var peers []gossipAgent.Peer
 		for _, n := range nodes {
-			peers = append(peers, models.Peer{
+			peers = append(peers, gossipAgent.Peer{
 				ID:          n.ID,
 				Address:     n.Addr,
 				ServiceName: n.Service,

@@ -1,4 +1,4 @@
-package models
+package agent
 
 type Peer struct {
 	ID          string `json:"id"`

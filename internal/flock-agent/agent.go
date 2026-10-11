@@ -2,7 +2,6 @@ package agent
 
 import (
 	"flock/internal/flock-agent/models"
-	internalModels "flock/internal/models"
 	"fmt"
 	"log"
 	"sync"
@@ -28,7 +27,7 @@ type flockAgent struct {
 }
 
 // Start creates and starts an agent node and returns it.
-func Start(nodeName string, bindPort string, peers []internalModels.Peer) Agent {
+func Start(nodeName string, bindPort string, peers []Peer) Agent {
 	cfg := memberlist.DefaultLocalConfig()
 	cfg.Name = nodeName
 	cfg.BindPort = parsePort(bindPort)

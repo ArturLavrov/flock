@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	gossipingAgent "flock/internal/flock-agent"
 	httpService "flock/internal/flock-agent/http"
-	"flock/internal/models"
 	"fmt"
 	"log"
 	"net/http"
@@ -31,7 +30,7 @@ func main() {
 
 // getAvailablePeers returns a list of peers we want to try to join.
 // For now this is a stub – return empty slice or a hardcoded node.
-func getAvailablePeers() []models.Peer {
+func getAvailablePeers() []gossipingAgent.Peer {
 	peerLimit := 5
 
 	client := &http.Client{
@@ -53,7 +52,7 @@ func getAvailablePeers() []models.Peer {
 	}
 
 	var result struct {
-		Peers []models.Peer `json:"peers"`
+		Peers []gossipingAgent.Peer `json:"peers"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
