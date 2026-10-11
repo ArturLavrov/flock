@@ -1,13 +1,13 @@
-package http
+package agent
 
 import (
-	"flock/internal/flock-agent"
+	"flock/internal/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func Start(a agent.Agent) http.Handler {
+func HTTPHandler(a models.Agent) http.Handler {
 	r := gin.New()
 	r.Use(gin.Recovery())
 

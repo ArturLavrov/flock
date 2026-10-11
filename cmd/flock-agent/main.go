@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	gossipingAgent "flock/internal/flock-agent"
-	httpService "flock/internal/flock-agent/http"
+	"flock/internal/models"
 	"fmt"
 	"log"
 	"net/http"
@@ -21,16 +21,14 @@ func main() {
 	bindPort := os.Args[2]
 	apiPort := fmt.Sprintf(":%s", os.Args[3])
 
-	agent := gossipingAgent.Start(nodeName, bindPort, getAvailablePeers())
-	h := httpService.Start(agent)
+	agent := models.Start(nodeName, bindPort, getAvailablePeers())
+	h := gossipingAgent.HTTPHandler(agent)
 
 	log.Printf("Agent REST running on %s\n", apiPort)
 	log.Fatal(http.ListenAndServe(apiPort, h))
 }
 
-// getAvailablePeers returns a list of peers we want to try to join.
-// For now this is a stub – return empty slice or a hardcoded node.
-func getAvailablePeers() []gossipingAgent.Peer {
+func getAvailablePeers() []models.Peer {
 	peerLimit := 5
 
 	client := &http.Client{
@@ -52,7 +50,7 @@ func getAvailablePeers() []gossipingAgent.Peer {
 	}
 
 	var result struct {
-		Peers []gossipingAgent.Peer `json:"peers"`
+		Peers []models.Peer `json:"peers"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {

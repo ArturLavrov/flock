@@ -1,7 +1,6 @@
-package agent
+package models
 
 import (
-	"flock/internal/flock-agent/models"
 	"fmt"
 	"log"
 	"sync"
@@ -14,15 +13,15 @@ import (
 // It keeps track of known nodes and provides sampling operations.
 type Agent interface {
 	// GetAllNodes returns all known nodes (from memberlist)
-	GetAllNodes() []models.Node
-	GetAllNodesByService(service string) []models.Node
+	GetAllNodes() []Node
+	GetAllNodesByService(service string) []Node
 }
 
 type flockAgent struct {
 	mlist   *memberlist.Memberlist
 	events  chan memberlist.NodeEvent
 	mu      sync.RWMutex
-	nodes   map[string]models.Node // key = member.Name
+	nodes   map[string]Node // key = member.Name
 	started time.Time
 }
 
@@ -43,7 +42,7 @@ func Start(nodeName string, bindPort string, peers []Peer) Agent {
 	a := &flockAgent{
 		mlist:   list,
 		events:  evCh,
-		nodes:   make(map[string]models.Node),
+		nodes:   make(map[string]Node),
 		started: time.Now(),
 	}
 
@@ -107,11 +106,11 @@ func (a *flockAgent) removeNode(m *memberlist.Node) {
 }
 
 // GetAllNodes returns all known nodes (copy).
-func (a *flockAgent) GetAllNodes() []models.Node {
+func (a *flockAgent) GetAllNodes() []Node {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
-	result := make([]models.Node, 0, len(a.nodes))
+	result := make([]Node, 0, len(a.nodes))
 	for _, n := range a.nodes {
 		result = append(result, n)
 	}
@@ -119,7 +118,7 @@ func (a *flockAgent) GetAllNodes() []models.Node {
 }
 
 // GetAllNodesByService returns nodes filtered by service name (optional helper).
-func (a *flockAgent) GetAllNodesByService(service string) []models.Node {
+func (a *flockAgent) GetAllNodesByService(service string) []Node {
 	if service == "" {
 		return a.GetAllNodes()
 	}
@@ -127,7 +126,7 @@ func (a *flockAgent) GetAllNodesByService(service string) []models.Node {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
-	result := make([]models.Node, 0)
+	result := make([]Node, 0)
 	for _, n := range a.nodes {
 		if n.Service == service {
 			result = append(result, n)
@@ -145,9 +144,9 @@ func parsePort(s string) int {
 	return p
 }
 
-// memberToNode converts a memberlist node to our internal models.Node.
-func memberToNode(m *memberlist.Node) models.Node {
-	return models.Node{
+// memberToNode converts a memberlist node to our internal Node.
+func memberToNode(m *memberlist.Node) Node {
+	return Node{
 		ID:            m.Name,
 		Addr:          fmt.Sprintf("%s:%d", m.Addr.To4().String(), m.Port),
 		Service:       m.Name,
