@@ -13,15 +13,15 @@ import (
 
 func main() {
 	if len(os.Args) < 4 {
-		fmt.Println("Usage: go run main.go <node_name> <bind_port> <agent_api_port>")
+		fmt.Println("Usage: go run main.go <service_name> <bind_port> <agent_api_port>")
 		os.Exit(1)
 	}
 
-	nodeName := os.Args[1]
+	serviceName := os.Args[1]
 	bindPort := os.Args[2]
 	apiPort := fmt.Sprintf(":%s", os.Args[3])
 
-	agent := gossipAgent.Start(nodeName, bindPort, getAvailableNodes())
+	agent := gossipAgent.Start(serviceName, bindPort, getAvailableNodes())
 	h := service.HTTPHandler(agent)
 
 	log.Printf("Agent REST running on %s\n", apiPort)
@@ -35,7 +35,7 @@ func getAvailableNodes() []gossipAgent.Node {
 		Timeout: 3 * time.Second,
 	}
 
-	url := fmt.Sprintf("http://localhost:8081/v1/nodes?limit=%d", nodeLimit)
+	url := fmt.Sprintf("http://localhost:8081/api/v1/nodes?limit=%d", nodeLimit)
 
 	resp, err := client.Get(url)
 	if err != nil {

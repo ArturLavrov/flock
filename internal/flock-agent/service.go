@@ -15,8 +15,8 @@ func HTTPHandler(a models.Agent) http.Handler {
 		c.String(http.StatusOK, "ok")
 	})
 
-	r.GET("/v1/nodes", func(c *gin.Context) {
-		c.JSON(http.StatusOK, a.GetAllNodes())
+	r.GET("/api/v1/nodes", func(c *gin.Context) {
+		c.JSON(http.StatusOK, a.GetNodesByName(c.Query("name")))
 	})
 
 	return r

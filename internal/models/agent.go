@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/memberlist"
 )
 
@@ -13,7 +14,7 @@ import (
 // It keeps track of known nodes and provides sampling operations.
 type Agent interface {
 	GetAllNodes() []Node
-	GetAllNodesByName(name string) []Node
+	GetNodesByName(name string) []Node
 }
 
 type flockAgent struct {
@@ -25,9 +26,10 @@ type flockAgent struct {
 }
 
 // Start creates and starts an agent node and returns it.
-func Start(nodeName string, bindPort string, nodes []Node) Agent {
+func Start(serviceName string, bindPort string, nodes []Node) Agent {
 	cfg := memberlist.DefaultLocalConfig()
-	cfg.Name = nodeName
+	cfg.Name = uuid.NewString()[:8]
+	cfg.Delegate = nodeMetadataDelegate{serviceName: serviceName}
 	cfg.BindPort = parsePort(bindPort)
 
 	evCh := make(chan memberlist.NodeEvent, 16)
@@ -62,6 +64,23 @@ func Start(nodeName string, bindPort string, nodes []Node) Agent {
 
 	return a
 }
+
+type nodeMetadataDelegate struct {
+	serviceName string
+}
+
+func (d nodeMetadataDelegate) NodeMeta(limit int) []byte {
+	meta := []byte(d.serviceName)
+	if len(meta) > limit {
+		return nil
+	}
+	return meta
+}
+
+func (nodeMetadataDelegate) NotifyMsg([]byte)                {}
+func (nodeMetadataDelegate) GetBroadcasts(int, int) [][]byte { return nil }
+func (nodeMetadataDelegate) LocalState(bool) []byte          { return nil }
+func (nodeMetadataDelegate) MergeRemoteState([]byte, bool)   {}
 
 // handleEvents consumes memberlist events and updates our in-memory nodes map.
 func (a *flockAgent) handleEvents() {
@@ -114,8 +133,8 @@ func (a *flockAgent) GetAllNodes() []Node {
 	return result
 }
 
-// GetAllNodesByName returns nodes filtered by name.
-func (a *flockAgent) GetAllNodesByName(name string) []Node {
+// GetNodesByName returns nodes filtered by name.
+func (a *flockAgent) GetNodesByName(name string) []Node {
 	if name == "" {
 		return a.GetAllNodes()
 	}
@@ -125,7 +144,7 @@ func (a *flockAgent) GetAllNodesByName(name string) []Node {
 
 	result := make([]Node, 0)
 	for _, node := range a.nodes {
-		if node.Tag == name {
+		if node.ServiceName == name {
 			result = append(result, node)
 		}
 	}
@@ -147,7 +166,7 @@ func memberToNode(m *memberlist.Node) Node {
 		ID:            m.Name,
 		IP:            m.Addr.String(),
 		Port:          int(m.Port),
-		Tag:           m.Name,
+		ServiceName:   string(m.Meta),
 		LastHeartbeat: time.Now().Unix(),
 	}
 }

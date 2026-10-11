@@ -46,7 +46,10 @@ go run cmd/peer-sampling-service/main.go 7946
 go run cmd/flock-agent/main.go node2 7947 8085
 
 # Query available nodes
-curl http://localhost:8085/v1/nodes
+curl http://localhost:8085/api/v1/nodes
+
+# Query nodes by name
+curl "http://localhost:8085/api/v1/nodes?name=node2"
 ```
 ---
 <p align="center"> <sub>Built with ❤️ in Go for distributed systems enthusiasts</sub> </p>

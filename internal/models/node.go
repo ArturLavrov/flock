@@ -9,7 +9,7 @@ type Node struct {
 	ID            string `json:"id"`
 	IP            string `json:"ip"`
 	Port          int    `json:"port"`
-	Tag           string `json:"tag"`
+	ServiceName   string `json:"service_name"`
 	LastHeartbeat int64  `json:"last_heartbeat"`
 }
 
