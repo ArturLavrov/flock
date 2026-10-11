@@ -3,22 +3,22 @@ info:
   title: Peer Sampling Service API
   version: 1.0.0
   description: >
-    Minimal API for retrieving a random subset of peers currently known to the system.
+    Minimal API for retrieving a random subset of nodes currently known to the system.
 servers:
   - url: http://localhost:8081
     description: Local development
 
 paths:
-  /v1/peers:
+  /v1/nodes:
     get:
-      summary: Get a random subset of peers
+      summary: Get a random subset of nodes
       description: >
-        Returns a randomly selected subset of known peers in the cluster.  
-        The number of peers returned is controlled by the `limit` parameter.
+        Returns a randomly selected subset of known nodes in the cluster.
+        The number of nodes returned is controlled by the `limit` parameter.
       parameters:
         - name: limit
           in: query
-          description: Maximum number of peers to return.
+          description: Maximum number of nodes to return.
           required: false
           schema:
             type: integer
@@ -26,18 +26,18 @@ paths:
             default: 5
       responses:
         '200':
-          description: A list of sampled peers.
+          description: A list of sampled nodes.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  peers:
+                  nodes:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Peer'
+                      $ref: '#/components/schemas/Node'
                 required:
-                  - peers
+                  - nodes
         '500':
           description: Internal server error
           content:
@@ -47,25 +47,31 @@ paths:
 
 components:
   schemas:
-    Peer:
+    Node:
       type: object
-      description: Basic peer descriptor.
+      description: Basic node descriptor.
       properties:
         id:
           type: string
           description: Unique node identifier within the cluster.
           example: "node-8d312a3f"
-        address:
+        addr:
           type: string
-          description: Host and port to reach this peer (ip:port or host:port).
+          description: Host and port to reach this node (ip:port or host:port).
           example: "10.0.0.12:5000"
-        service:
+        tag:
           type: string
-          description: Logical service that this peer belongs to.
-          example: "payment-service"
+          description: Node tag used for grouping or filtering.
+          example: "payments"
+        last_heartbeat:
+          type: integer
+          format: int64
+          description: Unix timestamp (seconds) of the node's last heartbeat.
+          example: 1730580000
       required:
         - id
-        - address
+        - addr
+        - last_heartbeat
     Error:
       type: object
       properties:

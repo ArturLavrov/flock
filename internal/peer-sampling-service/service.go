@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"flock/internal/models"
+	gossitAgent "flock/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -16,13 +16,13 @@ func Start(gossipPort string) http.Handler {
 	r.Use(gin.Recovery())
 
 	pssNodeName := generatePssNodeName()
-	peers := getPeers()
-	agent := models.Start(pssNodeName, gossipPort, peers)
+	nodes := getActiveNodes()
+	agent := gossitAgent.Start(pssNodeName, gossipPort, nodes)
 
-	r.GET("/v1/peers", func(c *gin.Context) {
-		peers := agent.GetAllPeers()
+	r.GET("/v1/nodes", func(c *gin.Context) {
+		nodes := agent.GetAllNodes()
 		c.JSON(http.StatusOK, gin.H{
-			"peers": peers,
+			"nodes": nodes,
 		})
 	})
 
@@ -34,7 +34,7 @@ func generatePssNodeName() string {
 	return fmt.Sprintf("pss_%s", shortID)
 }
 
-func getPeers() []models.Peer {
-	var peers []models.Peer
-	return peers
+func getActiveNodes() []models.Node {
+	var nodes []models.Node
+	return nodes
 }

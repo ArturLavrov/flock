@@ -1,8 +1,8 @@
 package models
 
 type Node struct {
-	ID            string
-	Addr          string
-	Service       string
-	LastHeartbeat int64
+	ID            string `json:"id"`
+	Addr          string `json:"addr"`
+	Tag           string `json:"tag"`
+	LastHeartbeat int64  `json:"last_heartbeat"`
 }

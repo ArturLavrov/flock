@@ -21,21 +21,21 @@ func main() {
 	bindPort := os.Args[2]
 	apiPort := fmt.Sprintf(":%s", os.Args[3])
 
-	agent := models.Start(nodeName, bindPort, getAvailablePeers())
+	agent := models.Start(nodeName, bindPort, getAvailableNodes())
 	h := gossipingAgent.HTTPHandler(agent)
 
 	log.Printf("Agent REST running on %s\n", apiPort)
 	log.Fatal(http.ListenAndServe(apiPort, h))
 }
 
-func getAvailablePeers() []models.Peer {
-	peerLimit := 5
+func getAvailableNodes() []models.Node {
+	nodeLimit := 5
 
 	client := &http.Client{
 		Timeout: 3 * time.Second,
 	}
 
-	url := fmt.Sprintf("http://localhost:8081/v1/peers?limit=%d", peerLimit)
+	url := fmt.Sprintf("http://localhost:8081/v1/nodes?limit=%d", nodeLimit)
 
 	resp, err := client.Get(url)
 	if err != nil {
@@ -50,13 +50,13 @@ func getAvailablePeers() []models.Peer {
 	}
 
 	var result struct {
-		Peers []models.Peer `json:"peers"`
+		Nodes []models.Node `json:"nodes"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		fmt.Printf("Failed to decode peers: %v\n", err)
+		fmt.Printf("Failed to decode nodes: %v\n", err)
 		return nil
 	}
 
-	return result.Peers
+	return result.Nodes
 }

@@ -4,7 +4,7 @@ info:
   version: 0.1.0
   description: >
     Minimal REST API for the Flock Agent.  
-    Allows querying the agent's local membership view and retrieving a random peer sample.
+    Allows querying the agent's local membership view and retrieving a random node sample.
 
 servers:
   - url: http://localhost:8080
@@ -30,10 +30,10 @@ paths:
       operationId: listNodes
       tags: [nodes]
       parameters:
-        - name: service
+        - name: tag
           in: query
           required: false
-          description: Optional service name to filter nodes
+          description: Optional tag to filter nodes
           schema:
             type: string
       responses:
@@ -50,11 +50,11 @@ paths:
                   value:
                     - id: node-1
                       addr: 10.0.0.11:7946
-                      service: payments
+                      tag: payments
                       last_heartbeat: 1730580000
                     - id: node-2
                       addr: 10.0.0.12:7946
-                      service: auth
+                      tag: auth
                       last_heartbeat: 1730580005
         '500':
           $ref: '#/components/responses/InternalError'
@@ -76,9 +76,9 @@ components:
           type: string
           description: Node network address in host:port format
           example: 10.0.0.11:7946
-        service:
+        tag:
           type: string
-          description: Optional logical service or group label
+          description: Optional node tag for grouping or filtering
           example: payments
         last_heartbeat:
           type: integer
