@@ -12,16 +12,15 @@ import (
 // Agent defines the behavior of a Flock agent.
 // It keeps track of known nodes and provides sampling operations.
 type Agent interface {
-	// GetAllNodes returns all known nodes (from memberlist)
-	GetAllNodes() []Node
-	GetAllNodesByService(service string) []Node
+	GetAllPeers() []Peer
+	GetAllPeersByName(name string) []Peer
 }
 
 type flockAgent struct {
 	mlist   *memberlist.Memberlist
 	events  chan memberlist.NodeEvent
 	mu      sync.RWMutex
-	nodes   map[string]Node // key = member.Name
+	peers   map[string]Peer // key = member.Name
 	started time.Time
 }
 
@@ -42,7 +41,7 @@ func Start(nodeName string, bindPort string, peers []Peer) Agent {
 	a := &flockAgent{
 		mlist:   list,
 		events:  evCh,
-		nodes:   make(map[string]Node),
+		peers:   make(map[string]Peer),
 		started: time.Now(),
 	}
 
@@ -89,47 +88,47 @@ func (a *flockAgent) refreshFromMemberlist() {
 	defer a.mu.Unlock()
 
 	for _, m := range a.mlist.Members() {
-		a.nodes[m.Name] = memberToNode(m)
+		a.peers[m.Name] = memberToPeer(m)
 	}
 }
 
 func (a *flockAgent) addOrUpdateNode(m *memberlist.Node) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.nodes[m.Name] = memberToNode(m)
+	a.peers[m.Name] = memberToPeer(m)
 }
 
 func (a *flockAgent) removeNode(m *memberlist.Node) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	delete(a.nodes, m.Name)
+	delete(a.peers, m.Name)
 }
 
-// GetAllNodes returns all known nodes (copy).
-func (a *flockAgent) GetAllNodes() []Node {
+// GetAllPeers returns all known peers (copy).
+func (a *flockAgent) GetAllPeers() []Peer {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
-	result := make([]Node, 0, len(a.nodes))
-	for _, n := range a.nodes {
-		result = append(result, n)
+	result := make([]Peer, 0, len(a.peers))
+	for _, peer := range a.peers {
+		result = append(result, peer)
 	}
 	return result
 }
 
-// GetAllNodesByService returns nodes filtered by service name (optional helper).
-func (a *flockAgent) GetAllNodesByService(service string) []Node {
-	if service == "" {
-		return a.GetAllNodes()
+// GetAllPeersByName returns peers filtered by name.
+func (a *flockAgent) GetAllPeersByName(name string) []Peer {
+	if name == "" {
+		return a.GetAllPeers()
 	}
 
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
-	result := make([]Node, 0)
-	for _, n := range a.nodes {
-		if n.Service == service {
-			result = append(result, n)
+	result := make([]Peer, 0)
+	for _, peer := range a.peers {
+		if peer.ServiceName == name {
+			result = append(result, peer)
 		}
 	}
 	return result
@@ -144,12 +143,12 @@ func parsePort(s string) int {
 	return p
 }
 
-// memberToNode converts a memberlist node to our internal Node.
-func memberToNode(m *memberlist.Node) Node {
-	return Node{
+// memberToPeer converts a memberlist node to our internal Peer.
+func memberToPeer(m *memberlist.Node) Peer {
+	return Peer{
 		ID:            m.Name,
-		Addr:          fmt.Sprintf("%s:%d", m.Addr.To4().String(), m.Port),
-		Service:       m.Name,
+		Address:       fmt.Sprintf("%s:%d", m.Addr.To4().String(), m.Port),
+		ServiceName:   m.Name,
 		LastHeartbeat: time.Now().Unix(),
 	}
 }

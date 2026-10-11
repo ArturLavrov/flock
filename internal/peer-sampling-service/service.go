@@ -20,16 +20,7 @@ func Start(gossipPort string) http.Handler {
 	agent := models.Start(pssNodeName, gossipPort, peers)
 
 	r.GET("/v1/peers", func(c *gin.Context) {
-		nodes := agent.GetAllNodes()
-
-		var peers []models.Peer
-		for _, n := range nodes {
-			peers = append(peers, models.Peer{
-				ID:          n.ID,
-				Address:     n.Addr,
-				ServiceName: n.Service,
-			})
-		}
+		peers := agent.GetAllPeers()
 		c.JSON(http.StatusOK, gin.H{
 			"peers": peers,
 		})

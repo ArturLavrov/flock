@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
+	if len(os.Args) < 1 {
 		fmt.Println("Usage: go run main.go <gossip_port>")
 		os.Exit(1)
 	}

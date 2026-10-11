@@ -16,7 +16,16 @@ func HTTPHandler(a models.Agent) http.Handler {
 	})
 
 	r.GET("/v1/nodes", func(c *gin.Context) {
-		nodes := a.GetAllNodes()
+		peers := a.GetAllPeers()
+		nodes := make([]models.Node, 0, len(peers))
+		for _, peer := range peers {
+			nodes = append(nodes, models.Node{
+				ID:            peer.ID,
+				Addr:          peer.Address,
+				Service:       peer.ServiceName,
+				LastHeartbeat: peer.LastHeartbeat,
+			})
+		}
 		c.JSON(http.StatusOK, nodes)
 	})
 
