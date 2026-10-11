@@ -34,7 +34,7 @@ func generatePssNodeName() string {
 	return fmt.Sprintf("pss_%s", shortID)
 }
 
-func getActiveNodes() []models.Node {
-	var nodes []models.Node
+func getActiveNodes() []gossitAgent.Node {
+	var nodes []gossitAgent.Node
 	return nodes
 }

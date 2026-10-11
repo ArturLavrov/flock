@@ -46,9 +46,7 @@ func Start(nodeName string, bindPort string, nodes []Node) Agent {
 	}
 
 	if len(nodes) > 0 {
-		//TODO: improve this logic later
-		// we join by address (host:port)
-		n, err := list.Join([]string{nodes[0].Addr})
+		n, err := list.Join([]string{nodes[0].getAddr()})
 		if err != nil {
 			log.Printf("Failed to join cluster: %v", err)
 		} else {
@@ -147,7 +145,8 @@ func parsePort(s string) int {
 func memberToNode(m *memberlist.Node) Node {
 	return Node{
 		ID:            m.Name,
-		Addr:          fmt.Sprintf("%s:%d", m.Addr.To4().String(), m.Port),
+		IP:            m.Addr.String(),
+		Port:          int(m.Port),
 		Tag:           m.Name,
 		LastHeartbeat: time.Now().Unix(),
 	}

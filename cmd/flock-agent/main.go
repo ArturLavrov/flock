@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	gossipingAgent "flock/internal/flock-agent"
-	"flock/internal/models"
+	service "flock/internal/flock-agent"
+	gossipAgent "flock/internal/models"
 	"fmt"
 	"log"
 	"net/http"
@@ -21,14 +21,14 @@ func main() {
 	bindPort := os.Args[2]
 	apiPort := fmt.Sprintf(":%s", os.Args[3])
 
-	agent := models.Start(nodeName, bindPort, getAvailableNodes())
-	h := gossipingAgent.HTTPHandler(agent)
+	agent := gossipAgent.Start(nodeName, bindPort, getAvailableNodes())
+	h := service.HTTPHandler(agent)
 
 	log.Printf("Agent REST running on %s\n", apiPort)
 	log.Fatal(http.ListenAndServe(apiPort, h))
 }
 
-func getAvailableNodes() []models.Node {
+func getAvailableNodes() []gossipAgent.Node {
 	nodeLimit := 5
 
 	client := &http.Client{
@@ -50,7 +50,7 @@ func getAvailableNodes() []models.Node {
 	}
 
 	var result struct {
-		Nodes []models.Node `json:"nodes"`
+		Nodes []gossipAgent.Node `json:"nodes"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
