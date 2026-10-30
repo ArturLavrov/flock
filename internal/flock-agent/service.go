@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func HTTPHandler(a models.Agent) http.Handler {
+func HTTPHandler(agent models.Agent) http.Handler {
 	r := gin.New()
 	r.Use(gin.Recovery())
 
@@ -16,7 +16,7 @@ func HTTPHandler(a models.Agent) http.Handler {
 	})
 
 	r.GET("/api/v1/nodes", func(c *gin.Context) {
-		c.JSON(http.StatusOK, a.GetNodesByName(c.Query("name")))
+		c.JSON(http.StatusOK, agent.GetNodesByName(c.Query("name")))
 	})
 
 	return r

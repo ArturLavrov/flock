@@ -1,7 +1,9 @@
 package peersamplingservice
 
 import (
+	"log"
 	"net/http"
+	"strconv"
 
 	gossitAgent "flock/internal/models"
 
@@ -13,7 +15,12 @@ func Start(gossipPort string) http.Handler {
 	r.Use(gin.Recovery())
 
 	nodes := getActiveNodes()
-	agent := gossitAgent.Start("pss", gossipPort, nodes)
+	port, err := strconv.Atoi(gossipPort)
+	if err != nil {
+		log.Fatalf("Invalid gossip port: %v", err)
+	}
+	agentNode := gossitAgent.NewNode("pss", port)
+	agent := gossitAgent.Start(agentNode, nodes)
 
 	r.GET("/api/v1/nodes", func(c *gin.Context) {
 		nodes := agent.GetAllNodes()
