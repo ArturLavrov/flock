@@ -29,6 +29,7 @@ func main() {
 	}
 	currentNode := cluster.NewNode(serviceName, gossipPort, isAnchorNode)
 
+	// TODO:inital bootstraping problem with mulitple anchor nodes will be solved later
 	if !isAnchorNode {
 		discoveredNodes, err = cluster.GetAvailableNodes()
 		if err != nil {

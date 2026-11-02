@@ -13,10 +13,10 @@ import (
 )
 
 type GossipAgent struct {
-	Current cluster.Node
-	members *memberlist.Memberlist
-	mu      sync.RWMutex
-	nodes   []cluster.Node
+	CurrentNode cluster.Node
+	members     *memberlist.Memberlist
+	mu          sync.RWMutex
+	nodes       []cluster.Node
 }
 
 func New(current *cluster.Node, nodes []cluster.Node) *GossipAgent {
@@ -28,54 +28,66 @@ func New(current *cluster.Node, nodes []cluster.Node) *GossipAgent {
 	}
 
 	return &GossipAgent{
-		Current: *current,
+		CurrentNode: *current,
 	}
 }
 
-func (a *GossipAgent) Start() error {
+func (agent *GossipAgent) Start() error {
 	config := memberlist.DefaultLocalConfig()
-	config.Name = a.Current.GetDisplayName()
-	config.BindPort = a.Current.GetPort()
+	config.Name = agent.CurrentNode.GetDisplayName()
+	config.BindPort = agent.CurrentNode.GetPort()
 
 	members, err := memberlist.Create(config)
 	if err != nil {
 		log.Fatal("Unable to establish memebership")
 	}
 
-	a.members = members
-	membership := a.members.Members()
+	agent.members = members
+	membership := agent.members.Members()
 	nodes := make([]cluster.Node, 0, len(membership))
 	for _, member := range membership {
 		nodes = append(nodes, ToNode(member))
 	}
 
-	a.mu.Lock()
-	a.nodes = nodes
-	a.mu.Unlock()
+	agent.nodes = nodes
 
-	console.New().Print("Node successfully join cluster")
+	console := console.New()
+	console.Print("Node successfully join cluster")
 	return err
 }
 
-func (a *GossipAgent) Stop() error {
-	if a.members == nil {
+func (agent *GossipAgent) Stop() error {
+	if agent.members == nil {
 		return nil
 	}
-	return a.members.Shutdown()
+	return agent.members.Shutdown()
 }
 
-func (a *GossipAgent) GetAllNodes() []cluster.Node {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-	return append([]cluster.Node(nil), a.nodes...)
+func (agent *GossipAgent) GetAllNodes() []cluster.Node {
+	agent.mu.RLock()
+	defer agent.mu.RUnlock()
+	return append([]cluster.Node(nil), agent.nodes...)
 }
 
-func (a *GossipAgent) GetNodesByName(name string) []cluster.Node {
-	return nil
+func (agent *GossipAgent) GetNodesByName(name string) []cluster.Node {
+	if name == "" {
+		return agent.GetAllNodes()
+	}
+
+	agent.mu.RLock()
+	defer agent.mu.RUnlock()
+
+	nodes := make([]cluster.Node, 0)
+	for _, node := range agent.nodes {
+		if node.ServiceName == name {
+			nodes = append(nodes, node)
+		}
+	}
+	return nodes
 }
 
-func (a *GossipAgent) GetCurrentNode() cluster.Node {
-	return a.Current
+func (agent *GossipAgent) GetCurrentNode() cluster.Node {
+	return agent.CurrentNode
 }
 
 func ToNode(member *memberlist.Node) cluster.Node {

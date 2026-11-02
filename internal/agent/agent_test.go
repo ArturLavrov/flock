@@ -15,8 +15,8 @@ func TestNewStoresCurrentNode(t *testing.T) {
 
 	got := New(&current, nodes)
 
-	if got.Current != current {
-		t.Errorf("current node = %#v, want %#v", got.Current, current)
+	if got.CurrentNode != current {
+		t.Errorf("current node = %#v, want %#v", got.CurrentNode, current)
 	}
 }
 
@@ -66,5 +66,39 @@ func TestStartAndStopReturnNil(t *testing.T) {
 	}
 	if err := a.Stop(); err != nil {
 		t.Errorf("Stop() error = %v, want nil", err)
+	}
+}
+
+func TestGetNodesByName(t *testing.T) {
+	agent := &GossipAgent{
+		nodes: []cluster.Node{
+			{ID: "node-1", ServiceName: "worker"},
+			{ID: "node-2", ServiceName: "worker"},
+			{ID: "node-3", ServiceName: "database"},
+		},
+	}
+
+	tests := []struct {
+		testName  string
+		queryName string
+		want      []string
+	}{
+		{testName: "matching service", queryName: "worker", want: []string{"node-1", "node-2"}},
+		{testName: "empty name returns all", queryName: "", want: []string{"node-1", "node-2", "node-3"}},
+		{testName: "missing service", queryName: "missing", want: []string{}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.testName, func(t *testing.T) {
+			got := agent.GetNodesByName(tt.queryName)
+			if len(got) != len(tt.want) {
+				t.Fatalf("got %d nodes, want %d: %#v", len(got), len(tt.want), got)
+			}
+			for i, id := range tt.want {
+				if got[i].ID != id {
+					t.Errorf("node %d ID = %q, want %q", i, got[i].ID, id)
+				}
+			}
+		})
 	}
 }
