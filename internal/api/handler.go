@@ -1,13 +1,14 @@
-package agent
+package api
 
 import (
-	"flock/internal/models"
 	"net/http"
+
+	"flock/internal/agent"
 
 	"github.com/gin-gonic/gin"
 )
 
-func HTTPHandler(agent models.Agent) http.Handler {
+func HTTPHandler(agent *agent.GossipAgent) http.Handler {
 	r := gin.New()
 	r.Use(gin.Recovery())
 

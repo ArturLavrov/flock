@@ -1,115 +1,77 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
-	"net"
-	"net/http"
 	"os"
 	"strconv"
-	"time"
 
-	service "flock/internal/flock-agent"
-	gossipAgent "flock/internal/models"
+	agent "flock/internal/agent"
+	api "flock/internal/api"
+	cluster "flock/internal/cluster"
+	"flock/internal/console"
 )
 
-const agentVersion = "v0.1.0"
-
 func main() {
-	if len(os.Args) < 4 {
-		fmt.Println("Usage: go run main.go <service_name> <bind_port> <agent_api_port>")
+	if len(os.Args) < 4 || len(os.Args) > 5 {
+		fmt.Println("Usage: go run main.go <service_name> <gossip_port> <api_port> [is_anchor_node]")
 		os.Exit(1)
 	}
 
-	serviceName := os.Args[1]
-	bindPort, err := strconv.Atoi(os.Args[2])
-	if err != nil {
-		log.Fatalf("Invalid bind port: %v", err)
+	serviceName := getServiceName(os.Args[1])
+	gossipPort := getGossipPort(os.Args[2])
+	apiPort := getApiPort(os.Args[3])
+	discoveredNodes := []cluster.Node{}
+	var err error
+	isAnchorNode := false
+	if len(os.Args) == 5 {
+		isAnchorNode = getIsAnchorNode(os.Args[4])
 	}
-	apiPort := fmt.Sprintf(":%s", os.Args[3])
+	currentNode := cluster.NewNode(serviceName, gossipPort, isAnchorNode)
 
-	agentNode := gossipAgent.NewNode(serviceName, bindPort)
-	nodes, discoveryErr := getAvailableNodes()
-	eventCh := make(chan gossipAgent.MembershipEvent)
-	startupReady := make(chan struct{})
-	go func() {
-		pending := make([]gossipAgent.MembershipEvent, 0)
-		printEvent := func(event gossipAgent.MembershipEvent) {
-			if err := gossipAgent.PrintMembershipEvent(event); err != nil {
-				log.Printf("Failed to print membership event: %v", err)
-			}
+	if !isAnchorNode {
+		discoveredNodes, err = cluster.GetAvailableNodes()
+		if err != nil {
+			log.Fatalf("Unable to discover cluster nodes: %v", err)
 		}
-
-		for {
-			select {
-			case event := <-eventCh:
-				pending = append(pending, event)
-			case <-startupReady:
-				for _, event := range pending {
-					printEvent(event)
-				}
-				for event := range eventCh {
-					printEvent(event)
-				}
-				return
-			}
-		}
-	}()
-
-	agent, joinErr := gossipAgent.StartWithEvents(agentNode, nodes, func(event gossipAgent.MembershipEvent) {
-		eventCh <- event
-	})
-	localNode := agent.GetLocalNode()
-	if err := gossipAgent.PrintAgentInfo(gossipAgent.AgentInfo{
-		Version:  agentVersion,
-		NodeID:   localNode.ID,
-		Address:  net.JoinHostPort(localNode.IP, strconv.Itoa(localNode.Port)),
-		Protocol: "SWIM / Gossip",
-		Status:   "ALIVE",
-	}); err != nil {
-		log.Printf("Failed to print agent startup information: %v", err)
-	}
-	close(startupReady)
-	if joinErr != nil {
-		log.Printf("Failed to join cluster: %v", joinErr)
-	}
-	if discoveryErr != nil {
-		fmt.Printf("%v\n", discoveryErr)
 	}
 
-	h := service.HTTPHandler(agent)
+	agent := agent.New(&currentNode, discoveredNodes)
+	if err := agent.Start(); err != nil {
+		log.Fatalf("Unable to start agent: %v", err)
+	}
 
-	log.Printf("Agent REST running on %s\n", apiPort)
-	log.Fatal(http.ListenAndServe(apiPort, h))
+	api.HTTPHandler(agent)
+	console.New().Print(fmt.Sprintf("Agent HTTP API running on %s", apiPort))
 }
 
-func getAvailableNodes() ([]gossipAgent.Node, error) {
-	nodeLimit := 5
-
-	client := &http.Client{
-		Timeout: 3 * time.Second,
+func getGossipPort(gossipPortArg string) int {
+	port, err := strconv.Atoi(gossipPortArg)
+	if err != nil || port < 1 || port > 65535 {
+		log.Fatalf("Invalid gossip port: %q (valid range: 1-65535)", gossipPortArg)
 	}
+	return port
+}
 
-	url := fmt.Sprintf("http://localhost:8081/api/v1/nodes?limit=%d", nodeLimit)
+func getApiPort(apiPortArg string) string {
+	port, err := strconv.Atoi(apiPortArg)
+	if err != nil || port < 1 || port > 65535 {
+		log.Fatalf("Invalid API port: %q (valid range: 1-65535)", apiPortArg)
+	}
+	return ":" + strconv.Itoa(port)
+}
 
-	resp, err := client.Get(url)
+func getIsAnchorNode(isAnchorNodeArg string) bool {
+	isAnchorNode, err := strconv.ParseBool(isAnchorNodeArg)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to call Peer Sampling Service: %v", err)
+		log.Fatalf("Invalid anchor node value: %q (must be true or false)", isAnchorNodeArg)
 	}
-	defer resp.Body.Close()
+	return isAnchorNode
+}
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Unexpected response status: %d", resp.StatusCode)
+func getServiceName(serviceNameArg string) string {
+	if serviceNameArg == "" {
+		log.Fatal("Service name cannot be empty")
 	}
-
-	var result struct {
-		Nodes []gossipAgent.Node `json:"nodes"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("Failed to decode nodes: %v", err)
-	}
-
-	return result.Nodes, nil
+	return serviceNameArg
 }
