@@ -17,15 +17,15 @@ func TestNewNodeCreatesUUIDFormatID(t *testing.T) {
 	if node.ServiceName != "pss" || node.Port != 7946 {
 		t.Errorf("node configuration = (%q, %d), want (%q, %d)", node.ServiceName, node.Port, "pss", 7946)
 	}
-	if node.isAnchor {
-		t.Error("node isAnchor = true, want false")
+	if node.isBootstrap {
+		t.Error("node isBootstrap = true, want false")
 	}
 }
 
-func TestNewNodeSetsAnchorFlag(t *testing.T) {
+func TestNewNodeSetsBootstrapFlag(t *testing.T) {
 	node := NewNode("pss", 7946, true)
-	if !node.isAnchor {
-		t.Fatal("node isAnchor = false, want true")
+	if !node.isBootstrap {
+		t.Fatal("node isBootstrap = false, want true")
 	}
 }
 

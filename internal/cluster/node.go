@@ -13,15 +13,15 @@ type Node struct {
 	Port          int    `json:"port"`
 	ServiceName   string `json:"service_name"`
 	LastHeartbeat int64  `json:"last_heartbeat"`
-	isAnchor      bool   `json:"is_anchor"`
+	isBootstrap   bool   `json:"is_bootstrap"`
 }
 
-func NewNode(serviceName string, port int, isAnchor bool) Node {
+func NewNode(serviceName string, port int, isBootstrap bool) Node {
 	return Node{
 		ID:          uuid.NewString()[:8],
 		ServiceName: serviceName,
 		Port:        port,
-		isAnchor:    isAnchor,
+		isBootstrap: isBootstrap,
 	}
 }
 

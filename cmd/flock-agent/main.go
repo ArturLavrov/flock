@@ -15,7 +15,7 @@ import (
 
 func main() {
 	if len(os.Args) < 4 || len(os.Args) > 5 {
-		fmt.Println("Usage: go run main.go <service_name> <gossip_port> <api_port> [is_anchor_node]")
+		fmt.Println("Usage: go run main.go <service_name> <gossip_port> <api_port> [is_bootstrap_node]")
 		os.Exit(1)
 	}
 
@@ -24,14 +24,14 @@ func main() {
 	apiPort := getApiPort(os.Args[3])
 	discoveredNodes := []cluster.Node{}
 	var err error
-	isAnchorNode := false
+	isBootstrapNode := false
 	if len(os.Args) == 5 {
-		isAnchorNode = getIsAnchorNode(os.Args[4])
+		isBootstrapNode = getIsBootstrapNode(os.Args[4])
 	}
-	currentNode := cluster.NewNode(serviceName, gossipPort, isAnchorNode)
+	currentNode := cluster.NewNode(serviceName, gossipPort, isBootstrapNode)
 
-	// TODO:inital bootstraping problem with mulitple anchor nodes will be solved later
-	if !isAnchorNode {
+	// TODO: Handle bootstrap discovery when multiple bootstrap nodes are configured.
+	if !isBootstrapNode {
 		discoveredNodes, err = cluster.GetAvailableNodes()
 		if err != nil {
 			log.Fatalf("Unable to discover cluster nodes: %v", err)
@@ -65,12 +65,12 @@ func getApiPort(apiPortArg string) string {
 	return ":" + strconv.Itoa(port)
 }
 
-func getIsAnchorNode(isAnchorNodeArg string) bool {
-	isAnchorNode, err := strconv.ParseBool(isAnchorNodeArg)
+func getIsBootstrapNode(isBootstrapNodeArg string) bool {
+	isBootstrapNode, err := strconv.ParseBool(isBootstrapNodeArg)
 	if err != nil {
-		log.Fatalf("Invalid anchor node value: %q (must be true or false)", isAnchorNodeArg)
+		log.Fatalf("Invalid bootstrap node value: %q (must be true or false)", isBootstrapNodeArg)
 	}
-	return isAnchorNode
+	return isBootstrapNode
 }
 
 func getServiceName(serviceNameArg string) string {
