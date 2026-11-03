@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"flock/internal/cluster"
+	"flock/internal/console"
 
 	"github.com/hashicorp/memberlist"
 )
@@ -105,10 +106,16 @@ func TestGetNodesByName(t *testing.T) {
 
 type recordingConsole struct {
 	messages []string
+	levels   []console.LogLevel
 }
 
-func (console *recordingConsole) Print(message string) {
-	console.messages = append(console.messages, message)
+func (output *recordingConsole) Print(message string) {
+	output.messages = append(output.messages, message)
+}
+
+func (output *recordingConsole) Log(level console.LogLevel, text string) {
+	output.messages = append(output.messages, text)
+	output.levels = append(output.levels, level)
 }
 
 func TestMembershipEventHandlerTracksAndReportsJoinAndLeave(t *testing.T) {
@@ -130,6 +137,9 @@ func TestMembershipEventHandlerTracksAndReportsJoinAndLeave(t *testing.T) {
 	if len(output.messages) != 1 || output.messages[0] != "Node joined: worker_node1234" {
 		t.Errorf("join messages = %#v", output.messages)
 	}
+	if len(output.levels) != 1 || output.levels[0] != console.LogLevelInfo {
+		t.Errorf("join log levels = %#v, want Info", output.levels)
+	}
 
 	handler.NotifyLeave(member)
 	if nodes := agent.GetAllNodes(); len(nodes) != 0 {
@@ -137,5 +147,8 @@ func TestMembershipEventHandlerTracksAndReportsJoinAndLeave(t *testing.T) {
 	}
 	if len(output.messages) != 2 || output.messages[1] != "Node leave: worker_node1234" {
 		t.Errorf("leave messages = %#v", output.messages)
+	}
+	if len(output.levels) != 2 || output.levels[1] != console.LogLevelWarn {
+		t.Errorf("leave log levels = %#v, want Warn", output.levels)
 	}
 }

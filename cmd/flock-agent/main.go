@@ -43,7 +43,7 @@ func main() {
 		log.Fatalf("Unable to start agent: %v", err)
 	}
 
-	console.New().Print(fmt.Sprintf("Agent HTTP API running on %s", apiPort))
+	console.New().Log(console.LogLevelInfo, fmt.Sprintf("Agent HTTP API running on %s", apiPort))
 	if err := http.ListenAndServe(apiPort, api.HTTPHandler(agent)); err != nil {
 		log.Fatalf("Agent HTTP API stopped: %v", err)
 	}

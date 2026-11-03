@@ -71,8 +71,8 @@ func (agent *GossipAgent) Start() error {
 		agent.upsertNode(ToNode(member))
 	}
 
-	console := console.New()
-	console.Print("Node successfully join cluster")
+	output := console.New()
+	output.Log(console.LogLevelInfo, "Node successfully join cluster")
 	return err
 }
 
@@ -117,7 +117,7 @@ type membershipEventHandler struct {
 
 func (handler membershipEventHandler) NotifyJoin(member *memberlist.Node) {
 	handler.agent.upsertNode(ToNode(member))
-	handler.console.Print(fmt.Sprintf("Node joined: %s", member.Name))
+	handler.console.Log(console.LogLevelInfo, fmt.Sprintf("Node joined: %s", member.Name))
 }
 
 func (handler membershipEventHandler) NotifyUpdate(member *memberlist.Node) {
@@ -136,7 +136,7 @@ func (handler membershipEventHandler) NotifyLeave(member *memberlist.Node) {
 	}
 	handler.agent.mu.Unlock()
 
-	handler.console.Print(fmt.Sprintf("Node leave: %s", member.Name))
+	handler.console.Log(console.LogLevelWarn, fmt.Sprintf("Node leave: %s", member.Name))
 }
 
 func (agent *GossipAgent) upsertNode(node cluster.Node) {

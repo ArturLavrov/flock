@@ -1,9 +1,29 @@
 package console
 
-import "github.com/pterm/pterm"
+import (
+	"fmt"
+
+	"github.com/pterm/pterm"
+)
 
 type PtermConsole struct{}
 
-func (PtermConsole) Print(message string) {
-	pterm.DefaultLogger.WithLevel(pterm.LogLevelInfo).Info(message)
+func (console PtermConsole) Print(message string) {
+	pterm.DefaultBasicText.Println(message)
+}
+
+func (PtermConsole) Log(level LogLevel, text string) {
+	logger := pterm.DefaultLogger
+	switch level {
+	case LogLevelDebug:
+		logger.Debug(text)
+	case LogLevelInfo:
+		logger.Info(text)
+	case LogLevelWarn:
+		logger.Warn(text)
+	case LogLevelError:
+		logger.Error(text)
+	default:
+		logger.Error(fmt.Sprintf("Invalid log level %d: %s", level, text))
+	}
 }
