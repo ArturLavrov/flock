@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -42,8 +43,10 @@ func main() {
 		log.Fatalf("Unable to start agent: %v", err)
 	}
 
-	api.HTTPHandler(agent)
 	console.New().Print(fmt.Sprintf("Agent HTTP API running on %s", apiPort))
+	if err := http.ListenAndServe(apiPort, api.HTTPHandler(agent)); err != nil {
+		log.Fatalf("Agent HTTP API stopped: %v", err)
+	}
 }
 
 func getGossipPort(gossipPortArg string) int {

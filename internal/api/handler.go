@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"flock/internal/agent"
+	"flock/internal/cluster"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,7 +18,11 @@ func HTTPHandler(agent *agent.GossipAgent) http.Handler {
 	})
 
 	r.GET("/api/v1/nodes", func(c *gin.Context) {
-		c.JSON(http.StatusOK, agent.GetNodesByName(c.Query("name")))
+		nodes := agent.GetNodesByName(c.Query("name"))
+		if nodes == nil {
+			nodes = []cluster.Node{}
+		}
+		c.JSON(http.StatusOK, gin.H{"nodes": nodes})
 	})
 
 	return r

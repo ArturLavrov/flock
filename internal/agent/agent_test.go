@@ -1,12 +1,15 @@
 package agent
 
 import (
+	"net"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
 
 	"flock/internal/cluster"
+
+	"github.com/hashicorp/memberlist"
 )
 
 func TestNewStoresCurrentNode(t *testing.T) {
@@ -25,8 +28,6 @@ func TestNewRejectsInvalidInput(t *testing.T) {
 		switch testCase {
 		case "nil-current":
 			New(nil, []cluster.Node{{}})
-		case "empty-nodes":
-			New(&cluster.Node{}, nil)
 		}
 		return
 	}
@@ -36,7 +37,6 @@ func TestNewRejectsInvalidInput(t *testing.T) {
 		wantMessage string
 	}{
 		{name: "nil-current", wantMessage: "Current node cannot be nil"},
-		{name: "empty-nodes", wantMessage: "Cluster nodes cannot be empty"},
 	}
 
 	for _, tt := range tests {
@@ -56,7 +56,7 @@ func TestNewRejectsInvalidInput(t *testing.T) {
 
 func TestStartAndStopReturnNil(t *testing.T) {
 	current := cluster.NewNode("agent", 7946, false)
-	a := New(&current, []cluster.Node{cluster.NewNode("peer", 7947, false)})
+	a := New(&current, nil)
 
 	if err := a.Start(); err != nil {
 		t.Errorf("Start() error = %v, want nil", err)
@@ -100,5 +100,42 @@ func TestGetNodesByName(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+type recordingConsole struct {
+	messages []string
+}
+
+func (console *recordingConsole) Print(message string) {
+	console.messages = append(console.messages, message)
+}
+
+func TestMembershipEventHandlerTracksAndReportsJoinAndLeave(t *testing.T) {
+	agent := &GossipAgent{}
+	output := &recordingConsole{}
+	handler := membershipEventHandler{agent: agent, console: output}
+	member := &memberlist.Node{
+		Name: "worker_node1234",
+		Addr: net.ParseIP("127.0.0.1"),
+		Port: 7946,
+		Meta: []byte("worker"),
+	}
+
+	handler.NotifyJoin(member)
+	nodes := agent.GetAllNodes()
+	if len(nodes) != 1 || nodes[0].ID != "node1234" || nodes[0].ServiceName != "worker" {
+		t.Fatalf("nodes after join = %#v", nodes)
+	}
+	if len(output.messages) != 1 || output.messages[0] != "Node joined: worker_node1234" {
+		t.Errorf("join messages = %#v", output.messages)
+	}
+
+	handler.NotifyLeave(member)
+	if nodes := agent.GetAllNodes(); len(nodes) != 0 {
+		t.Errorf("nodes after leave = %#v, want none", nodes)
+	}
+	if len(output.messages) != 2 || output.messages[1] != "Node leave: worker_node1234" {
+		t.Errorf("leave messages = %#v", output.messages)
 	}
 }

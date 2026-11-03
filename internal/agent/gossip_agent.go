@@ -1,7 +1,10 @@
 package agent
 
 import (
+	"fmt"
 	"log"
+	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -13,22 +16,21 @@ import (
 )
 
 type GossipAgent struct {
-	CurrentNode cluster.Node
-	members     *memberlist.Memberlist
-	mu          sync.RWMutex
-	nodes       []cluster.Node
+	CurrentNode    cluster.Node
+	members        *memberlist.Memberlist
+	mu             sync.RWMutex
+	nodes          []cluster.Node
+	bootstrapNodes []cluster.Node
 }
 
 func New(current *cluster.Node, nodes []cluster.Node) *GossipAgent {
 	if current == nil {
 		log.Fatal("Current node cannot be nil")
 	}
-	if len(nodes) == 0 {
-		log.Fatal("Cluster nodes cannot be empty")
-	}
 
 	return &GossipAgent{
-		CurrentNode: *current,
+		CurrentNode:    *current,
+		bootstrapNodes: append([]cluster.Node(nil), nodes...),
 	}
 }
 
@@ -36,20 +38,38 @@ func (agent *GossipAgent) Start() error {
 	config := memberlist.DefaultLocalConfig()
 	config.Name = agent.CurrentNode.GetDisplayName()
 	config.BindPort = agent.CurrentNode.GetPort()
+	config.Events = membershipEventHandler{agent: agent, console: console.New()}
 
 	members, err := memberlist.Create(config)
 	if err != nil {
-		log.Fatal("Unable to establish memebership")
+		return fmt.Errorf("unable to establish membership: %w", err)
 	}
 
 	agent.members = members
-	membership := agent.members.Members()
-	nodes := make([]cluster.Node, 0, len(membership))
-	for _, member := range membership {
-		nodes = append(nodes, ToNode(member))
+	for _, member := range members.Members() {
+		agent.upsertNode(ToNode(member))
 	}
 
-	agent.nodes = nodes
+	addresses := make([]string, 0, len(agent.bootstrapNodes))
+	for _, node := range agent.bootstrapNodes {
+		if node.IP == "" || node.Port == 0 {
+			_ = members.Shutdown()
+			agent.members = nil
+			return fmt.Errorf("invalid bootstrap node address for %s", node.GetDisplayName())
+		}
+		addresses = append(addresses, net.JoinHostPort(node.IP, strconv.Itoa(node.Port)))
+	}
+	if len(addresses) > 0 {
+		if _, err := members.Join(addresses); err != nil {
+			_ = members.Shutdown()
+			agent.members = nil
+			return fmt.Errorf("unable to join discovered nodes: %w", err)
+		}
+	}
+
+	for _, member := range members.Members() {
+		agent.upsertNode(ToNode(member))
+	}
 
 	console := console.New()
 	console.Print("Node successfully join cluster")
@@ -88,6 +108,48 @@ func (agent *GossipAgent) GetNodesByName(name string) []cluster.Node {
 
 func (agent *GossipAgent) GetCurrentNode() cluster.Node {
 	return agent.CurrentNode
+}
+
+type membershipEventHandler struct {
+	agent   *GossipAgent
+	console console.Console
+}
+
+func (handler membershipEventHandler) NotifyJoin(member *memberlist.Node) {
+	handler.agent.upsertNode(ToNode(member))
+	handler.console.Print(fmt.Sprintf("Node joined: %s", member.Name))
+}
+
+func (handler membershipEventHandler) NotifyUpdate(member *memberlist.Node) {
+	handler.agent.upsertNode(ToNode(member))
+}
+
+func (handler membershipEventHandler) NotifyLeave(member *memberlist.Node) {
+	node := ToNode(member)
+
+	handler.agent.mu.Lock()
+	for i, existing := range handler.agent.nodes {
+		if existing.ID == node.ID {
+			handler.agent.nodes = append(handler.agent.nodes[:i], handler.agent.nodes[i+1:]...)
+			break
+		}
+	}
+	handler.agent.mu.Unlock()
+
+	handler.console.Print(fmt.Sprintf("Node leave: %s", member.Name))
+}
+
+func (agent *GossipAgent) upsertNode(node cluster.Node) {
+	agent.mu.Lock()
+	defer agent.mu.Unlock()
+
+	for i, existing := range agent.nodes {
+		if existing.ID == node.ID {
+			agent.nodes[i] = node
+			return
+		}
+	}
+	agent.nodes = append(agent.nodes, node)
 }
 
 func ToNode(member *memberlist.Node) cluster.Node {
