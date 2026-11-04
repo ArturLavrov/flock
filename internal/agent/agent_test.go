@@ -113,6 +113,10 @@ func (output *recordingConsole) Print(message string) {
 	output.messages = append(output.messages, message)
 }
 
+func (*recordingConsole) PrintFlockTitle() {}
+
+func (*recordingConsole) PrintBox(console.NodeInfo) {}
+
 func (output *recordingConsole) Log(level console.LogLevel, text string) {
 	output.messages = append(output.messages, text)
 	output.levels = append(output.levels, level)

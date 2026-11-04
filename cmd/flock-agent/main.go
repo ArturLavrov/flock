@@ -19,17 +19,29 @@ func main() {
 		os.Exit(1)
 	}
 
+	flk_console := console.New()
 	serviceName := getServiceName(os.Args[1])
 	gossipPort := getGossipPort(os.Args[2])
-	apiPort := getApiPort(os.Args[3])
-	discoveredNodes := []cluster.Node{}
-	var err error
+	apiPort := getAPIPort(os.Args[3])
 	isBootstrapNode := false
 	if len(os.Args) == 5 {
 		isBootstrapNode = getIsBootstrapNode(os.Args[4])
 	}
 	currentNode := cluster.NewNode(serviceName, gossipPort, isBootstrapNode)
 
+	flk_console.PrintFlockTitle()
+	flk_console.PrintBox(console.NodeInfo{
+		NodeID:          currentNode.ID,
+		NodeName:        currentNode.GetDisplayName(),
+		IsBootstrapNode: isBootstrapNode,
+		GossipPort:      gossipPort,
+		ApiPort:         apiPort,
+		Protocol:        "Gossip",
+		Status:          "Starting",
+	})
+
+	discoveredNodes := []cluster.Node{}
+	var err error
 	// TODO: Handle bootstrap discovery when multiple bootstrap nodes are configured.
 	if !isBootstrapNode {
 		discoveredNodes, err = cluster.GetAvailableNodes()
@@ -43,8 +55,9 @@ func main() {
 		log.Fatalf("Unable to start agent: %v", err)
 	}
 
-	console.New().Log(console.LogLevelInfo, fmt.Sprintf("Agent HTTP API running on %s", apiPort))
-	if err := http.ListenAndServe(apiPort, api.HTTPHandler(agent)); err != nil {
+	apiAddress := fmt.Sprintf(":%d", apiPort)
+	flk_console.Log(console.LogLevelInfo, fmt.Sprintf("Agent HTTP API running on %s", apiAddress))
+	if err := http.ListenAndServe(apiAddress, api.HTTPHandler(agent)); err != nil {
 		log.Fatalf("Agent HTTP API stopped: %v", err)
 	}
 }
@@ -57,12 +70,12 @@ func getGossipPort(gossipPortArg string) int {
 	return port
 }
 
-func getApiPort(apiPortArg string) string {
+func getAPIPort(apiPortArg string) int {
 	port, err := strconv.Atoi(apiPortArg)
 	if err != nil || port < 1 || port > 65535 {
 		log.Fatalf("Invalid API port: %q (valid range: 1-65535)", apiPortArg)
 	}
-	return ":" + strconv.Itoa(port)
+	return port
 }
 
 func getIsBootstrapNode(isBootstrapNodeArg string) bool {
