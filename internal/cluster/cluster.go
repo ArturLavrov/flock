@@ -14,6 +14,8 @@ func GetAvailableNodes() ([]Node, error) {
 		Timeout: 3 * time.Second,
 	}
 
+	// TODO:fix this code from hardcoded value
+
 	url := fmt.Sprintf("http://localhost:8081/api/v1/nodes?limit=%d", nodeLimit)
 	resp, err := client.Get(url)
 	if err != nil {
