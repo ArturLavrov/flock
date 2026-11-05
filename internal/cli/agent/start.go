@@ -12,6 +12,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	MinTCPPortNumber = 0
+	MaxTcpPortNumber = 65535
+)
+
 func NewStartCommand() *cobra.Command {
 	var serviceName string
 	var gossipPort int
@@ -26,24 +31,22 @@ func NewStartCommand() *cobra.Command {
 			if serviceName == "" {
 				return fmt.Errorf("service name cannot be empty")
 			}
-			if gossipPort < 1 || gossipPort > 65535 {
+			if gossipPort < MinTCPPortNumber || gossipPort > MaxTcpPortNumber {
 				return fmt.Errorf("invalid gossip port: %d (valid range: 1-65535)", gossipPort)
 			}
-			if apiPort < 1 || apiPort > 65535 {
+			if apiPort < MinTCPPortNumber || apiPort > MaxTcpPortNumber {
 				return fmt.Errorf("invalid API port: %d (valid range: 1-65535)", apiPort)
 			}
 
-			currentNode := cluster.NewNode(serviceName, gossipPort, isSeedNode)
-			seedNodes := []cluster.Node{}
-			if !isSeedNode {
-				var err error
-				seedNodes, err = cluster.GetAvailableNodes()
-				if err != nil {
-					return fmt.Errorf("unable to discover cluster nodes: %w", err)
-				}
+			currentNode := cluster.NewNode(serviceName, gossipPort, false)
+			var err error
+			var nodes []cluster.Node
+			nodes, err = cluster.GetAvailableNodes()
+			if err != nil {
+				return fmt.Errorf("unable to discover cluster nodes: %w", err)
 			}
 
-			agent := gossip.New(&currentNode, seedNodes, apiPort)
+			agent := gossip.New(&currentNode, nodes, apiPort)
 			if err := agent.Start(); err != nil {
 				return fmt.Errorf("unable to start agent: %w", err)
 			}
@@ -51,6 +54,7 @@ func NewStartCommand() *cobra.Command {
 			apiAddress := fmt.Sprintf(":%d", apiPort)
 			output := console.New()
 			output.Log(console.LogLevelInfo, fmt.Sprintf("Agent HTTP API running on %s", apiAddress))
+
 			if err := http.ListenAndServe(apiAddress, api.HTTPHandler(agent)); err != nil {
 				return fmt.Errorf("agent HTTP API stopped: %w", err)
 			}

@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"flock/internal/cli/agent"
+	"flock/internal/cli/seed"
 )
 
 const helpTemplate = `{{with .Short}}{{.}}
@@ -25,6 +26,7 @@ func NewRootCommand() *cobra.Command {
 	}
 	rootCommand.SetHelpTemplate(helpTemplate)
 	rootCommand.AddCommand(agent.NewCommand())
+	rootCommand.AddCommand(seed.NewCommand())
 
 	return rootCommand
 }

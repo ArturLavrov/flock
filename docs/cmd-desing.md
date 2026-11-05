@@ -19,4 +19,12 @@ flock agent inspect 324dfg3
 flock agent logs 324dfg3
 
 
+## Flock cluster initializaiton
+flock seed \
+  --gossip-port 4202 \
+  --api-port 8082 \
+  --detach \
+  192.168.1.10:4200 \
+  192.168.1.11:4200
 
+The following command initialize a new seed node in cluster that will be joined to other seed nodes and eventually discover all cluster topology
