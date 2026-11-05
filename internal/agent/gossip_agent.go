@@ -12,29 +12,56 @@ import (
 	"flock/internal/cluster"
 	"flock/internal/console"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/memberlist"
 )
 
 type GossipAgent struct {
-	CurrentNode    cluster.Node
-	members        *memberlist.Memberlist
-	mu             sync.RWMutex
-	nodes          []cluster.Node
-	bootstrapNodes []cluster.Node
+	AgentID     string
+	ServiceName string
+	GossipPort  int
+	ApiPort     int
+	Protocol    string
+	Version     string
+	Status      string
+	CurrentNode cluster.Node
+	members     *memberlist.Memberlist
+	mu          sync.RWMutex
+	nodes       []cluster.Node
+	seedNodes   []cluster.Node
 }
 
-func New(current *cluster.Node, nodes []cluster.Node) *GossipAgent {
+func New(current *cluster.Node, seedNodes []cluster.Node, apiPort int) *GossipAgent {
 	if current == nil {
 		log.Fatal("Current node cannot be nil")
 	}
 
 	return &GossipAgent{
-		CurrentNode:    *current,
-		bootstrapNodes: append([]cluster.Node(nil), nodes...),
+		AgentID:     uuid.NewString()[:8],
+		ServiceName: current.ServiceName,
+		GossipPort:  current.GetPort(),
+		ApiPort:     apiPort,
+		Protocol:    "Gossip",
+		Version:     "v0.1.0",
+		Status:      "Starting",
+		CurrentNode: *current,
+		seedNodes:   append([]cluster.Node(nil), seedNodes...),
 	}
 }
 
 func (agent *GossipAgent) Start() error {
+	output := console.New()
+	output.PrintFlockTitle()
+	output.PrintAgentInfo(
+		agent.AgentID,
+		agent.ServiceName,
+		agent.GossipPort,
+		agent.ApiPort,
+		agent.Protocol,
+		agent.Version,
+		agent.Status,
+	)
+
 	config := memberlist.DefaultLocalConfig()
 	config.Name = agent.CurrentNode.GetDisplayName()
 	config.BindPort = agent.CurrentNode.GetPort()
@@ -50,12 +77,12 @@ func (agent *GossipAgent) Start() error {
 		agent.upsertNode(ToNode(member))
 	}
 
-	addresses := make([]string, 0, len(agent.bootstrapNodes))
-	for _, node := range agent.bootstrapNodes {
+	addresses := make([]string, 0, len(agent.seedNodes))
+	for _, node := range agent.seedNodes {
 		if node.IP == "" || node.Port == 0 {
 			_ = members.Shutdown()
 			agent.members = nil
-			return fmt.Errorf("invalid bootstrap node address for %s", node.GetDisplayName())
+			return fmt.Errorf("invalid seed node address for %s", node.GetDisplayName())
 		}
 		addresses = append(addresses, net.JoinHostPort(node.IP, strconv.Itoa(node.Port)))
 	}
@@ -71,7 +98,6 @@ func (agent *GossipAgent) Start() error {
 		agent.upsertNode(ToNode(member))
 	}
 
-	output := console.New()
 	output.Log(console.LogLevelInfo, "Node successfully join cluster")
 	return err
 }

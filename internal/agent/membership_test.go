@@ -8,9 +8,9 @@ import (
 	"flock/internal/cluster"
 )
 
-func TestStartJoinsBootstrapNodesAndPropagatesJoin(t *testing.T) {
+func TestStartJoinsSeedNodesAndPropagatesJoin(t *testing.T) {
 	firstNode := cluster.NewNode("first", availablePort(t), true)
-	first := New(&firstNode, nil)
+	first := New(&firstNode, nil, availablePort(t))
 	if err := first.Start(); err != nil {
 		t.Fatalf("start first agent: %v", err)
 	}
@@ -20,13 +20,13 @@ func TestStartJoinsBootstrapNodesAndPropagatesJoin(t *testing.T) {
 		}
 	})
 
-	bootstrapNodes := first.GetAllNodes()
-	if len(bootstrapNodes) != 1 {
-		t.Fatalf("first agent nodes = %#v, want its local node", bootstrapNodes)
+	seedNodes := first.GetAllNodes()
+	if len(seedNodes) != 1 {
+		t.Fatalf("first agent nodes = %#v, want its local node", seedNodes)
 	}
 
 	secondNode := cluster.NewNode("second", availablePort(t), false)
-	second := New(&secondNode, bootstrapNodes)
+	second := New(&secondNode, seedNodes, availablePort(t))
 	if err := second.Start(); err != nil {
 		t.Fatalf("start second agent: %v", err)
 	}

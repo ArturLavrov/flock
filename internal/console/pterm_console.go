@@ -18,22 +18,22 @@ func (PtermConsole) PrintFlockTitle() {
 	pterm.NewStyle(pterm.FgGray).Println("Distributed cluster membership · v0.1.0")
 }
 
-func (PtermConsole) PrintBox(nodeInfo NodeInfo) {
+func (PtermConsole) PrintAgentInfo(agentID, serviceName string, gossipPort, apiPort int, protocol, version, status string) {
 	labelStyle := pterm.NewStyle(pterm.FgGray)
 	valueStyle := pterm.NewStyle(pterm.FgWhite)
 	statusStyle := pterm.NewStyle(pterm.FgGreen)
 	rows := []string{
-		fmt.Sprintf("%s  %s", labelStyle.Sprintf("%-12s", "Node ID"), valueStyle.Sprint(nodeInfo.NodeID)),
-		fmt.Sprintf("%s  %s", labelStyle.Sprintf("%-12s", "Node Name"), valueStyle.Sprint(nodeInfo.NodeName)),
-		fmt.Sprintf("%s  %s", labelStyle.Sprintf("%-12s", "Bootstrap"), valueStyle.Sprint(nodeInfo.IsBootstrapNode)),
-		fmt.Sprintf("%s  %s", labelStyle.Sprintf("%-12s", "Gossip Port"), valueStyle.Sprint(nodeInfo.GossipPort)),
-		fmt.Sprintf("%s  %s", labelStyle.Sprintf("%-12s", "API Port"), valueStyle.Sprint(nodeInfo.ApiPort)),
-		fmt.Sprintf("%s  %s", labelStyle.Sprintf("%-12s", "Protocol"), valueStyle.Sprint(nodeInfo.Protocol)),
-		fmt.Sprintf("%s  %s", labelStyle.Sprintf("%-12s", "Status"), statusStyle.Sprint("● "+nodeInfo.Status)),
+		fmt.Sprintf("%s  %s", labelStyle.Sprintf("%-12s", "Agent ID"), valueStyle.Sprint(agentID)),
+		fmt.Sprintf("%s  %s", labelStyle.Sprintf("%-12s", "Service Name"), valueStyle.Sprint(serviceName)),
+		fmt.Sprintf("%s  %s", labelStyle.Sprintf("%-12s", "Gossip Port"), valueStyle.Sprint(gossipPort)),
+		fmt.Sprintf("%s  %s", labelStyle.Sprintf("%-12s", "API Port"), valueStyle.Sprint(apiPort)),
+		fmt.Sprintf("%s  %s", labelStyle.Sprintf("%-12s", "Protocol"), valueStyle.Sprint(protocol)),
+		fmt.Sprintf("%s  %s", labelStyle.Sprintf("%-12s", "Version"), valueStyle.Sprint(version)),
+		fmt.Sprintf("%s  %s", labelStyle.Sprintf("%-12s", "Status"), statusStyle.Sprint("● "+status)),
 	}
 
 	box := pterm.DefaultBox
-	box.Title = "NODE INFORMATION"
+	box.Title = "AGENT INFORMATION"
 	box.BoxStyle = pterm.NewStyle(pterm.FgGray)
 	box.TextStyle = pterm.NewStyle(pterm.FgWhite)
 	box.LeftPadding = 1

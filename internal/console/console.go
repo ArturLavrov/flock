@@ -4,17 +4,7 @@ type Console interface {
 	Log(level LogLevel, text string)
 	Print(message string)
 	PrintFlockTitle()
-	PrintBox(nodeInfo NodeInfo)
-}
-
-type NodeInfo struct {
-	NodeID          string
-	NodeName        string
-	IsBootstrapNode bool
-	GossipPort      int
-	ApiPort         int
-	Protocol        string
-	Status          string
+	PrintAgentInfo(agentID, serviceName string, gossipPort, apiPort int, protocol, version, status string)
 }
 
 type LogLevel uint8

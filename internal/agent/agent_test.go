@@ -17,10 +17,41 @@ func TestNewStoresCurrentNode(t *testing.T) {
 	current := cluster.NewNode("agent", 7946, true)
 	nodes := []cluster.Node{cluster.NewNode("peer", 7947, false)}
 
-	got := New(&current, nodes)
+	got := New(&current, nodes, 8081)
 
 	if got.CurrentNode != current {
 		t.Errorf("current node = %#v, want %#v", got.CurrentNode, current)
+	}
+}
+
+func TestAgentProperties(t *testing.T) {
+	current := cluster.NewNode("payments", 4200, true)
+	a := New(&current, nil, 8081)
+	anotherAgent := New(&current, nil, 8081)
+
+	if len(a.AgentID) != 8 {
+		t.Errorf("AgentID = %q, want an 8-character ID", a.AgentID)
+	}
+	if a.AgentID == current.ID {
+		t.Errorf("AgentID = %q, should be distinct from the node ID", a.AgentID)
+	}
+	if a.AgentID == anotherAgent.AgentID {
+		t.Errorf("two agents unexpectedly share ID %q", a.AgentID)
+	}
+	if a.AgentID == "" {
+		t.Error("AgentID is empty")
+	}
+	if a.ServiceName != current.ServiceName {
+		t.Errorf("ServiceName = %q, want %q", a.ServiceName, current.ServiceName)
+	}
+	if a.GossipPort != current.Port {
+		t.Errorf("GossipPort = %d, want %d", a.GossipPort, current.Port)
+	}
+	if a.ApiPort != 8081 {
+		t.Errorf("ApiPort = %d, want 8081", a.ApiPort)
+	}
+	if a.Protocol != "Gossip" || a.Status != "Starting" {
+		t.Errorf("Protocol and status = %q/%q, want Gossip/Starting", a.Protocol, a.Status)
 	}
 }
 
@@ -28,7 +59,7 @@ func TestNewRejectsInvalidInput(t *testing.T) {
 	if testCase := os.Getenv("FLOCK_AGENT_INVALID_INPUT"); testCase != "" {
 		switch testCase {
 		case "nil-current":
-			New(nil, []cluster.Node{{}})
+			New(nil, []cluster.Node{{}}, 8081)
 		}
 		return
 	}
@@ -57,7 +88,7 @@ func TestNewRejectsInvalidInput(t *testing.T) {
 
 func TestStartAndStopReturnNil(t *testing.T) {
 	current := cluster.NewNode("agent", 7946, false)
-	a := New(&current, nil)
+	a := New(&current, nil, 8081)
 
 	if err := a.Start(); err != nil {
 		t.Errorf("Start() error = %v, want nil", err)
@@ -115,7 +146,7 @@ func (output *recordingConsole) Print(message string) {
 
 func (*recordingConsole) PrintFlockTitle() {}
 
-func (*recordingConsole) PrintBox(console.NodeInfo) {}
+func (*recordingConsole) PrintAgentInfo(string, string, int, int, string, string, string) {}
 
 func (output *recordingConsole) Log(level console.LogLevel, text string) {
 	output.messages = append(output.messages, text)

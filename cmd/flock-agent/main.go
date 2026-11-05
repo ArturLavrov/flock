@@ -15,7 +15,7 @@ import (
 
 func main() {
 	if len(os.Args) < 4 || len(os.Args) > 5 {
-		fmt.Println("Usage: go run main.go <service_name> <gossip_port> <api_port> [is_bootstrap_node]")
+		fmt.Println("Usage: go run main.go <service_name> <gossip_port> <api_port> [is_seed_node]")
 		os.Exit(1)
 	}
 
@@ -23,41 +23,29 @@ func main() {
 	serviceName := getServiceName(os.Args[1])
 	gossipPort := getGossipPort(os.Args[2])
 	apiPort := getAPIPort(os.Args[3])
-	isBootstrapNode := false
+	isSeedNode := false
 	if len(os.Args) == 5 {
-		isBootstrapNode = getIsBootstrapNode(os.Args[4])
+		isSeedNode = getIsSeedNode(os.Args[4])
 	}
-	currentNode := cluster.NewNode(serviceName, gossipPort, isBootstrapNode)
-
-	flk_console.PrintFlockTitle()
-	flk_console.PrintBox(console.NodeInfo{
-		NodeID:          currentNode.ID,
-		NodeName:        currentNode.GetDisplayName(),
-		IsBootstrapNode: isBootstrapNode,
-		GossipPort:      gossipPort,
-		ApiPort:         apiPort,
-		Protocol:        "Gossip",
-		Status:          "Starting",
-	})
+	currentNode := cluster.NewNode(serviceName, gossipPort, isSeedNode)
 
 	discoveredNodes := []cluster.Node{}
 	var err error
-	// TODO: Handle bootstrap discovery when multiple bootstrap nodes are configured.
-	if !isBootstrapNode {
+	// TODO: Handle seed discovery when multiple seed nodes are configured.
+	if !isSeedNode {
 		discoveredNodes, err = cluster.GetAvailableNodes()
 		if err != nil {
 			log.Fatalf("Unable to discover cluster nodes: %v", err)
 		}
 	}
-
-	agent := agent.New(&currentNode, discoveredNodes)
-	if err := agent.Start(); err != nil {
+	gossipAgent := agent.New(&currentNode, discoveredNodes, apiPort)
+	if err := gossipAgent.Start(); err != nil {
 		log.Fatalf("Unable to start agent: %v", err)
 	}
 
 	apiAddress := fmt.Sprintf(":%d", apiPort)
 	flk_console.Log(console.LogLevelInfo, fmt.Sprintf("Agent HTTP API running on %s", apiAddress))
-	if err := http.ListenAndServe(apiAddress, api.HTTPHandler(agent)); err != nil {
+	if err := http.ListenAndServe(apiAddress, api.HTTPHandler(gossipAgent)); err != nil {
 		log.Fatalf("Agent HTTP API stopped: %v", err)
 	}
 }
@@ -78,12 +66,12 @@ func getAPIPort(apiPortArg string) int {
 	return port
 }
 
-func getIsBootstrapNode(isBootstrapNodeArg string) bool {
-	isBootstrapNode, err := strconv.ParseBool(isBootstrapNodeArg)
+func getIsSeedNode(isSeedNodeArg string) bool {
+	isSeedNode, err := strconv.ParseBool(isSeedNodeArg)
 	if err != nil {
-		log.Fatalf("Invalid bootstrap node value: %q (must be true or false)", isBootstrapNodeArg)
+		log.Fatalf("Invalid seed node value: %q (must be true or false)", isSeedNodeArg)
 	}
-	return isBootstrapNode
+	return isSeedNode
 }
 
 func getServiceName(serviceNameArg string) string {
