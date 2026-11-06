@@ -38,7 +38,7 @@ func NewStartCommand() *cobra.Command {
 				return fmt.Errorf("invalid API port: %d (valid range: 1-65535)", apiPort)
 			}
 
-			currentNode := cluster.NewNode(serviceName, gossipPort, false)
+			currentNode := cluster.NewNode(serviceName, gossipPort, isSeedNode)
 			var err error
 			var nodes []cluster.Node
 			nodes, err = cluster.GetAvailableNodes()

@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 
@@ -22,6 +23,18 @@ func NewNode(serviceName string, port int, isSeedNode bool) Node {
 		ServiceName: serviceName,
 		Port:        port,
 		IsSeedNode:  isSeedNode,
+	}
+}
+
+func NewSeedNode(gossitPort int) Node {
+	nodeID := uuid.NewString()[:8]
+	seedNodeName := fmt.Sprintf("seed_node_%s", nodeID)
+
+	return Node{
+		ID:          nodeID,
+		ServiceName: seedNodeName,
+		Port:        gossitPort,
+		IsSeedNode:  true,
 	}
 }
 
