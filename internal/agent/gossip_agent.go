@@ -79,11 +79,6 @@ func (agent *GossipAgent) Start() error {
 
 	addresses := make([]string, 0, len(agent.seedNodes))
 	for _, node := range agent.seedNodes {
-		if node.IP == "" || node.Port == 0 {
-			_ = members.Shutdown()
-			agent.members = nil
-			return fmt.Errorf("invalid seed node address for %s", node.GetDisplayName())
-		}
 		addresses = append(addresses, net.JoinHostPort(node.IP, strconv.Itoa(node.Port)))
 	}
 	if len(addresses) > 0 {
