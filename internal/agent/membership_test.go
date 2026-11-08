@@ -9,7 +9,7 @@ import (
 )
 
 func TestStartJoinsSeedNodesAndPropagatesJoin(t *testing.T) {
-	firstNode := cluster.NewNode("first", availablePort(t), true)
+	firstNode := cluster.NewSeedNode(availablePort(t))
 	first := New(&firstNode, nil, availablePort(t))
 	if err := first.Start(); err != nil {
 		t.Fatalf("start first agent: %v", err)
@@ -25,7 +25,7 @@ func TestStartJoinsSeedNodesAndPropagatesJoin(t *testing.T) {
 		t.Fatalf("first agent nodes = %#v, want its local node", seedNodes)
 	}
 
-	secondNode := cluster.NewNode("second", availablePort(t), false)
+	secondNode := cluster.NewNode("second", availablePort(t))
 	second := New(&secondNode, seedNodes, availablePort(t))
 	if err := second.Start(); err != nil {
 		t.Fatalf("start second agent: %v", err)

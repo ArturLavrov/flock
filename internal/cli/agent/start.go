@@ -21,7 +21,6 @@ func NewStartCommand() *cobra.Command {
 	var serviceName string
 	var gossipPort int
 	var apiPort int
-	var isSeedNode bool
 
 	command := &cobra.Command{
 		Use:   "start",
@@ -38,7 +37,7 @@ func NewStartCommand() *cobra.Command {
 				return fmt.Errorf("invalid API port: %d (valid range: 1-65535)", apiPort)
 			}
 
-			currentNode := cluster.NewNode(serviceName, gossipPort, isSeedNode)
+			currentNode := cluster.NewNode(serviceName, gossipPort)
 			var err error
 			var nodes []cluster.Node
 			nodes, err = cluster.GetAvailableNodes()
@@ -64,7 +63,6 @@ func NewStartCommand() *cobra.Command {
 	command.Flags().StringVar(&serviceName, "service-name", "", "Name of the service")
 	command.Flags().IntVar(&gossipPort, "gossip-port", 0, "Gossip port")
 	command.Flags().IntVar(&apiPort, "api-port", 0, "API port")
-	command.Flags().BoolVar(&isSeedNode, "seed-node", false, "Start this agent as a seed node")
 	command.Flags().BoolP("detach", "d", false, "Run the agent in the background")
 	if err := command.MarkFlagRequired("service-name"); err != nil {
 		panic(err)

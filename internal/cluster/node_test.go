@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewNodeCreatesUUIDFormatID(t *testing.T) {
-	node := NewNode("pss", 7946, false)
+	node := NewNode("pss", 7946)
 
 	if len(node.ID) != 8 {
 		t.Fatalf("node ID length = %d, want 8", len(node.ID))
@@ -22,10 +22,10 @@ func TestNewNodeCreatesUUIDFormatID(t *testing.T) {
 	}
 }
 
-func TestNewNodeSetsSeedFlag(t *testing.T) {
-	node := NewNode("pss", 7946, true)
-	if !node.IsSeedNode {
-		t.Fatal("node IsSeedNode = false, want true")
+func TestNewSeedNode(t *testing.T) {
+	node := NewSeedNode(7946)
+	if node.ServiceName != SeedNodeName || !node.IsSeedNode {
+		t.Fatalf("seed node = (%q, %t), want (%q, true)", node.ServiceName, node.IsSeedNode, SeedNodeName)
 	}
 }
 

@@ -60,6 +60,7 @@ func (agent *GossipAgent) Start() error {
 		agent.Protocol,
 		agent.Version,
 		agent.Status,
+		agent.CurrentNode.IsSeed(),
 	)
 
 	config := memberlist.DefaultLocalConfig()

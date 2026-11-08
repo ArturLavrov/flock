@@ -1,10 +1,15 @@
 package cluster
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 
 	"github.com/google/uuid"
+)
+
+const (
+	SeedNodeName = "flock-seed-node"
 )
 
 type Node struct {
@@ -16,19 +21,22 @@ type Node struct {
 	IsSeedNode    bool   `json:"is_seed_node"`
 }
 
-func NewNode(serviceName string, port int, isSeedNode bool) Node {
+func NewNode(serviceName string, port int) Node {
+	if serviceName == SeedNodeName {
+		fmt.Errorf("% is a reserved name only for seed not and cannot be used!", SeedNodeName)
+	}
 	return Node{
 		ID:          uuid.NewString()[:8],
 		ServiceName: serviceName,
 		Port:        port,
-		IsSeedNode:  isSeedNode,
+		IsSeedNode:  false,
 	}
 }
 
 func NewSeedNode(gossitPort int) Node {
 	return Node{
 		ID:          uuid.NewString()[:8],
-		ServiceName: "flock-seed-node",
+		ServiceName: SeedNodeName,
 		Port:        gossitPort,
 		IsSeedNode:  true,
 	}
@@ -47,5 +55,5 @@ func (n *Node) GetPort() int {
 }
 
 func (n *Node) IsSeed() bool {
-	return n.ServiceName == "flock-seed-node"
+	return n.ServiceName == SeedNodeName
 }

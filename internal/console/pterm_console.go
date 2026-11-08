@@ -18,9 +18,16 @@ func (PtermConsole) PrintFlockTitle() {
 	pterm.NewStyle(pterm.FgGray).Println("Distributed cluster membership · v0.1.0")
 }
 
-func (PtermConsole) PrintAgentInfo(agentID, serviceName string, gossipPort, apiPort int, protocol, version, status string) {
-	labelStyle := pterm.NewStyle(pterm.FgGray)
+func (PtermConsole) PrintAgentInfo(agentID, serviceName string, gossipPort, apiPort int, protocol, version, status string, isSeedNodeAgent bool) {
+	labelStyle := pterm.NewStyle(pterm.FgGreen)
 	valueStyle := pterm.NewStyle(pterm.FgWhite)
+	boxStyle := pterm.NewStyle(pterm.FgGray)
+	textStyle := pterm.NewStyle(pterm.FgWhite)
+	if isSeedNodeAgent {
+		valueStyle = pterm.NewStyle(pterm.FgGreen)
+		boxStyle = pterm.NewStyle(pterm.FgGreen)
+		textStyle = pterm.NewStyle(pterm.FgGreen)
+	}
 	statusStyle := pterm.NewStyle(pterm.FgGreen)
 	rows := []string{
 		fmt.Sprintf("%s  %s", labelStyle.Sprintf("%-12s", "Agent ID"), valueStyle.Sprint(agentID)),
@@ -34,8 +41,8 @@ func (PtermConsole) PrintAgentInfo(agentID, serviceName string, gossipPort, apiP
 
 	box := pterm.DefaultBox
 	box.Title = "AGENT INFORMATION"
-	box.BoxStyle = pterm.NewStyle(pterm.FgGray)
-	box.TextStyle = pterm.NewStyle(pterm.FgWhite)
+	box.BoxStyle = boxStyle
+	box.TextStyle = textStyle
 	box.LeftPadding = 1
 	box.RightPadding = 1
 	box.TopPadding = 1

@@ -14,8 +14,8 @@ import (
 )
 
 func TestNewStoresCurrentNode(t *testing.T) {
-	current := cluster.NewNode("agent", 7946, true)
-	nodes := []cluster.Node{cluster.NewNode("peer", 7947, false)}
+	current := cluster.NewNode("agent", 7946)
+	nodes := []cluster.Node{cluster.NewNode("peer", 7947)}
 
 	got := New(&current, nodes, 8081)
 
@@ -25,7 +25,7 @@ func TestNewStoresCurrentNode(t *testing.T) {
 }
 
 func TestAgentProperties(t *testing.T) {
-	current := cluster.NewNode("payments", 4200, true)
+	current := cluster.NewNode("payments", 4200)
 	a := New(&current, nil, 8081)
 	anotherAgent := New(&current, nil, 8081)
 
@@ -87,7 +87,7 @@ func TestNewRejectsInvalidInput(t *testing.T) {
 }
 
 func TestStartAndStopReturnNil(t *testing.T) {
-	current := cluster.NewNode("agent", 7946, false)
+	current := cluster.NewNode("agent", 7946)
 	a := New(&current, nil, 8081)
 
 	if err := a.Start(); err != nil {
@@ -146,7 +146,7 @@ func (output *recordingConsole) Print(message string) {
 
 func (*recordingConsole) PrintFlockTitle() {}
 
-func (*recordingConsole) PrintAgentInfo(string, string, int, int, string, string, string) {}
+func (*recordingConsole) PrintAgentInfo(string, string, int, int, string, string, string, bool) {}
 
 func (output *recordingConsole) Log(level console.LogLevel, text string) {
 	output.messages = append(output.messages, text)
