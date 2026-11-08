@@ -180,6 +180,7 @@ func ToNode(member *memberlist.Node) cluster.Node {
 		Port:          int(member.Port),
 		LastHeartbeat: time.Now().Unix(),
 	}
+	// TODO: Refactor: some check are useless
 	if nameSeparator >= 0 {
 		node.ServiceName = member.Name[:nameSeparator]
 		node.ID = member.Name[nameSeparator+1:]
@@ -189,5 +190,10 @@ func ToNode(member *memberlist.Node) cluster.Node {
 	if len(member.Meta) > 0 {
 		node.ServiceName = string(member.Meta)
 	}
+
+	if node.IsSeed() {
+		node.IsSeedNode = true
+	}
+
 	return node
 }

@@ -28,20 +28,24 @@ func NewNode(serviceName string, port int, isSeedNode bool) Node {
 func NewSeedNode(gossitPort int) Node {
 	return Node{
 		ID:          uuid.NewString()[:8],
-		ServiceName: "flock_seed_node",
+		ServiceName: "flock-seed-node",
 		Port:        gossitPort,
 		IsSeedNode:  true,
 	}
 }
 
-func (n Node) getAddr() string {
+func (n *Node) getAddr() string {
 	return net.JoinHostPort(n.IP, strconv.Itoa(n.Port))
 }
 
-func (n Node) GetDisplayName() string {
+func (n *Node) GetDisplayName() string {
 	return n.ServiceName + "_" + n.ID
 }
 
-func (n Node) GetPort() int {
+func (n *Node) GetPort() int {
 	return n.Port
+}
+
+func (n *Node) IsSeed() bool {
+	return n.ServiceName == "flock-seed-node"
 }
